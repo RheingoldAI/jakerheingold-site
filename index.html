@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jake Rheingold | Engineer. Fun Guy. Rosie's Dad.</title>
     <meta name="description" content="Bridging the gap between AI and the intimidated AI consumer by documenting my own journey with vibe coding.">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -13,7 +14,8 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['DM Sans', 'sans-serif'],
+                        heading: ['"IBM Plex Sans"', 'sans-serif'],
+                        body: ['Roboto', 'sans-serif'],
                     },
                     colors: {
                         accent: '#0ea5e9',
@@ -23,8 +25,27 @@
         }
     </script>
     <style>
-        html { font-family: 'DM Sans', sans-serif; }
+        html { font-family: 'Roboto', sans-serif; }
         html, body { margin: 0; padding: 0; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; }
+        .font-heading { font-family: 'IBM Plex Sans', sans-serif; }
+
+        /* Subtle grain texture for depth */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* Refined selection color */
+        ::selection { background: #0ea5e920; }
+
+        /* Smooth link underlines */
+        a { text-underline-offset: 3px; }
     </style>
 </head>
 <body class="bg-gray-950 text-gray-100 antialiased">
@@ -32,7 +53,7 @@
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800/50">
         <div class="max-w-7xl mx-auto px-6 md:px-16 lg:px-32 py-4 flex items-center justify-between">
-            <a href="#" class="text-xl font-medium text-gray-100 hover:text-accent transition-colors">Jake Rheingold</a>
+            <a href="#" class="text-xl font-heading font-semibold text-gray-100 hover:text-accent transition-colors tracking-tight">Jake Rheingold</a>
             <div class="flex items-center gap-4">
                 <!-- Dark/Light Toggle -->
                 <button id="themeToggle" class="p-2 text-gray-400 hover:text-gray-100 transition-colors" aria-label="Toggle theme">
@@ -58,12 +79,12 @@
         <div class="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center md:items-start gap-12 md:gap-16">
             <!-- Left Text Column -->
             <div class="flex-1 text-center md:text-left">
-                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-100">Jake Rheingold</h1>
-                <p class="text-2xl md:text-3xl text-gray-300 mt-3">Engineer. Fun Guy. Rosie's Dad.</p>
-                <p class="text-lg md:text-xl mt-6 max-w-3xl leading-relaxed text-gray-200">
+                <h1 class="text-4xl md:text-5xl font-heading font-semibold tracking-tight text-gray-100">Jake Rheingold</h1>
+                <p class="text-2xl md:text-3xl text-gray-400 mt-3 font-light tracking-wide">Engineer. Fun Guy. Rosie's Dad.</p>
+                <p class="text-lg md:text-xl mt-6 max-w-3xl leading-relaxed text-gray-300 font-body">
                     Bridging the gap between AI and the intimidated AI consumer by documenting my own journey with vibe coding - successes, failures, and best practices.
                 </p>
-                <div class="text-base md:text-lg mt-8 leading-relaxed text-gray-400 space-y-1">
+                <div class="text-base md:text-lg mt-8 leading-relaxed text-gray-500 space-y-1 font-body">
                     <p>PM @Microsoft | Former U.K.G</p>
                     <p>Industrial & Systems Engineer @UF</p>
                     <p>M.S.I.S @NSU</p>
@@ -71,10 +92,10 @@
             </div>
             <!-- Right Image -->
             <div class="hidden md:block flex-shrink-0">
-                <img 
-                    src="AIHeadshot.jpg" 
-                    alt="Jake Rheingold profile photo" 
-                    class="w-56 md:w-72 lg:w-80 h-56 md:h-72 lg:h-80 rounded-full border-2 border-gray-700 object-cover object-top shadow-lg"
+                <img
+                    src="AIHeadshot.jpg"
+                    alt="Jake Rheingold profile photo"
+                    class="w-56 md:w-72 lg:w-80 h-56 md:h-72 lg:h-80 rounded-2xl border border-gray-800/60 object-cover object-top shadow-2xl shadow-black/30"
                 />
             </div>
         </div>
@@ -83,14 +104,14 @@
     <!-- About Section -->
     <section id="about" class="py-24 px-6 md:px-16 lg:px-32">
         <div class="max-w-5xl mx-auto">
-            <h2 class="text-4xl font-semibold mb-4 text-center md:text-left">Day Job</h2>
-            <p class="text-2xl text-gray-300 mb-6 text-center md:text-left">PM @Microsoft</p>
-            <p class="text-lg leading-relaxed text-gray-200 mb-12">
+            <h2 class="text-4xl font-heading font-semibold mb-4 text-center md:text-left tracking-tight">Day Job</h2>
+            <p class="text-2xl text-gray-400 mb-6 text-center md:text-left font-light">PM @Microsoft</p>
+            <p class="text-lg leading-relaxed text-gray-300 mb-12 font-body">
                 I am fully immersed in evaluating how AI is working in the real-world. Agent telemetry, user sentiment, experimentation - you name it, my hands are on it. What a time to be in Big Tech!
             </p>
-            
-            <h2 class="text-4xl font-semibold mb-4 text-center md:text-left">Every Night, Late Night</h2>
-            <p class="text-lg leading-relaxed text-gray-200">
+
+            <h2 class="text-4xl font-heading font-semibold mb-4 text-center md:text-left tracking-tight">Every Night, Late Night</h2>
+            <p class="text-lg leading-relaxed text-gray-300 font-body">
                 When the sun sets, the vibe coding begins. Armed with Claude and a cup of coffee, I build whatever sparks joy—tools, experiments, prototypes that might be useful, might be weird, but are always fun. Just pure creative flow.
             </p>
         </div>
@@ -99,37 +120,53 @@
     <!-- Builds Section -->
     <section id="builds" class="py-24 px-6 md:px-16 lg:px-32 bg-neutral-900/50">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-4xl font-semibold text-center mb-16">What I've Been Building</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-                
+            <h2 class="text-4xl font-heading font-semibold text-center mb-3 tracking-tight">What I've Been Building</h2>
+            <a href="https://github.com/RheezyAI" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 text-gray-500 hover:text-accent transition-colors mb-16 font-body text-sm">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                View all on GitHub
+            </a>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-10">
+
                 <!-- Project 1 -->
                 <a href="https://github.com/RheezyAI/faceless-youtube-bot" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-28 h-28 text-gray-400 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
+                    <div class="w-24 h-24 text-gray-500 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
                         <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                         </svg>
                     </div>
-                    <span class="text-lg font-medium mt-4 text-center text-gray-200 group-hover:text-accent transition-colors">Faceless YouTube Automated Uploader</span>
+                    <span class="text-base font-heading font-medium mt-3 text-center text-gray-300 group-hover:text-accent transition-colors">Faceless YouTube Automated Uploader</span>
                 </a>
 
                 <!-- Project 2 -->
                 <a href="https://github.com/RheezyAI" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-28 h-28 text-gray-400 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
+                    <div class="w-24 h-24 text-gray-500 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
                         <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                         </svg>
                     </div>
-                    <span class="text-lg font-medium mt-4 text-center text-gray-200 group-hover:text-accent transition-colors">Bookmark Plus</span>
+                    <span class="text-base font-heading font-medium mt-3 text-center text-gray-300 group-hover:text-accent transition-colors">Bookmark Plus</span>
                 </a>
 
                 <!-- Project 3 -->
                 <a href="https://github.com/RheezyAI" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
-                    <div class="w-28 h-28 text-gray-400 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
+                    <div class="w-24 h-24 text-gray-500 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
                         <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                         </svg>
                     </div>
-                    <span class="text-lg font-medium mt-4 text-center text-gray-200 group-hover:text-accent transition-colors">JakeRheingold.AI</span>
+                    <span class="text-base font-heading font-medium mt-3 text-center text-gray-300 group-hover:text-accent transition-colors">JakeRheingold.AI</span>
+                </a>
+
+                <!-- Project 4 -->
+                <a href="https://github.com/RheezyAI" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center">
+                    <div class="w-24 h-24 text-gray-500 group-hover:text-accent transition-all duration-300 group-hover:scale-110">
+                        <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                    </div>
+                    <span class="text-base font-heading font-medium mt-3 text-center text-gray-300 group-hover:text-accent transition-colors">Roast My Setup</span>
                 </a>
 
             </div>
@@ -139,8 +176,8 @@
     <!-- Writing Section -->
     <section id="writing" class="py-24 px-6 md:px-16 lg:px-32">
         <div class="max-w-4xl mx-auto">
-            <h2 class="text-4xl font-semibold mb-8 text-center md:text-left">Thoughts, Opinions, Experiences</h2>
-            <div class="text-lg leading-relaxed text-gray-200 mb-10">
+            <h2 class="text-4xl font-heading font-semibold mb-8 text-center md:text-left tracking-tight">Thoughts, Opinions, Experiences</h2>
+            <div class="text-lg leading-relaxed text-gray-300 mb-10 font-body">
                 <p class="mb-6">
                     I really feel there is a massive gap between the everyday casual AI user and that next tier of vibe coding and building apps. I think these everyday users have the appetite to up level their AI use in the ever-changing tech world, but are cautious and intimidated. Viral posts people see read like: "Build an AI bot that serves as your Chief of Staff in 10 minutes"; "I spent 2 hours coding the next big marketing app. Traditional marketing is dead."
                 </p>
@@ -168,8 +205,8 @@
     <!-- Connect Section -->
     <section id="connect" class="py-24 px-6 md:px-16 lg:px-32 bg-neutral-900/30">
         <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-3xl font-semibold mb-10">Let's Talk</h2>
-            
+            <h2 class="text-3xl font-heading font-semibold mb-10 tracking-tight">Let's Talk</h2>
+
             <!-- Social Links -->
             <div class="flex justify-center gap-8 mb-12">
                 <a href="https://x.com/RheezyBuilds" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-accent transition-colors" aria-label="X (Twitter)">
@@ -199,40 +236,40 @@
                 <input type="hidden" name="_replyto" value="rheezybuilds@gmail.com">
                 <div>
                     <label for="name" class="sr-only">Name</label>
-                    <input 
-                        type="text" 
-                        id="name" 
-                        name="name" 
-                        placeholder="Your name" 
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Your name"
                         required
-                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                        class="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all font-body"
                     />
                 </div>
                 <div>
                     <label for="email" class="sr-only">Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        placeholder="Your email" 
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Your email"
                         required
-                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                        class="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all font-body"
                     />
                 </div>
                 <div>
                     <label for="message" class="sr-only">Message</label>
-                    <textarea 
-                        id="message" 
-                        name="message" 
-                        rows="5" 
-                        placeholder="Your message" 
+                    <textarea
+                        id="message"
+                        name="message"
+                        rows="5"
+                        placeholder="Your message"
                         required
-                        class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors resize-none"
+                        class="w-full px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-lg text-gray-100 placeholder-gray-600 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all resize-none font-body"
                     ></textarea>
                 </div>
-                <button 
-                    type="submit" 
-                    class="w-full px-6 py-3 bg-accent hover:bg-sky-600 text-white font-medium rounded-lg transition-colors"
+                <button
+                    type="submit"
+                    class="w-full px-6 py-3 bg-accent hover:bg-sky-600 text-white font-heading font-semibold rounded-lg transition-colors tracking-wide"
                 >
                     Send Message
                 </button>
@@ -261,7 +298,7 @@
 
         themeToggle.addEventListener('click', () => {
             const isDark = document.body.classList.contains('bg-gray-950');
-            
+
             if (isDark) {
                 document.body.classList.remove('bg-gray-950', 'text-gray-100');
                 document.body.classList.add('bg-gray-100', 'text-gray-900');
