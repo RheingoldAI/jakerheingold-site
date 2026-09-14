@@ -1,0 +1,40 @@
+name: Update survivor pool model
+
+on:
+  schedule:
+    # 7:00 AM ET Thursday (12:00 UTC — EST-based; runs ~8am ET during EDT months)
+    - cron: '0 12 * * 4'
+    # 8:00 AM ET Saturday (13:00 UTC — EST-based; runs ~9am ET during EDT months)
+    - cron: '0 13 * * 6'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r survivor/requirements.txt
+
+      - name: Run model pipeline
+        run: python survivor/build_model.py
+
+      - name: Commit and push updated page + history
+        run: |
+          git config user.name "survivor-pool-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add survivor/index.html survivor/history/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update survivor pool model ($(date -u +%Y-%m-%d))"
+            git push
+          fi
