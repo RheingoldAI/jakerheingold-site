@@ -3,9 +3,10 @@
 Live NFL Survivor Pool picker, served at [jakerheingold.ai/survivor](https://jakerheingold.ai/survivor).
 
 - `template.html` — hand-maintained frontend source (edit this, not `index.html`)
-- `build_model.py` — fetches live nflverse odds + scrapes nfelo power ratings, computes win probabilities, solves the full-season optimal assignment, renders `index.html` from `template.html`, and writes a `history/` snapshot
+- `build_model.py` — fetches live nflverse odds + nfelo's power-ratings CSV, computes win probabilities, solves the full-season optimal assignment, renders `index.html` from `template.html`, and writes a `history/` snapshot
 - `index.html` — **generated file**, committed automatically by CI. Don't hand-edit.
 - `history/` — one JSON snapshot per automated run, plus `index.json` listing them. This is what powers the "History" section on the page.
+- `picks.json` — **hand-maintained**, the season's actual official picks: `{"<week>": {"picked": ["TEAM"], "recommended": ["TEAM"]}}`. Baked into every build as `DATA.logged_picks` so a logged pick shows up for anyone who opens the link, not just whoever's browser clicked "Log Pick" (browser local storage alone doesn't persist across devices/visitors). **Whenever a real pick is made, update this file and rerun the pipeline** — that's the only way it becomes visible to other people.
 
 ## Automation
 
@@ -26,4 +27,4 @@ The full project (concept writeup, same source files) is also published as a sta
 
 ## Known maintenance risk
 
-The nfelo scrape in `build_model.py` (`fetch_nfelo_ratings`) parses their power-ratings HTML table by structure, since they have no public API. If nfeloapp.com redesigns that page, the scrape will start failing loudly (it raises rather than silently returning bad data) and will need a quick update to match their new markup.
+`fetch_nfelo_ratings()` in `build_model.py` pulls nfelo's own automated CSV output (`github.com/greerreNFL/nfelo`) rather than scraping their website, and validates the `season` column matches `SEASON` before using it — if their feed ever falls behind (as their public site did at the start of the 2026 season) or the CSV format changes, it fails loudly instead of silently computing on stale or malformed data.
