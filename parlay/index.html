@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echo Chamber Group Parlays</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030712;
+  --card:rgba(23,23,23,0.6);
+  --card-solid:#111827;
+  --border:rgba(31,41,55,0.7);
+  --text:#F3F4F6;
+  --text-dim:#9CA3AF;
+  --text-dimmer:#6B7280;
+  --accent:#0EA5E9;
+  --accent-bright:#38BDF8;
+  --accent-hover:#0284C7;
+  --good:#22C55E;
+  --bad:#EF4444;
+  --gold:#EAB308;
+  --silver:#94A3B8;
+  --bronze:#D97706;
+}
+*{box-sizing:border-box;}
+html{font-family:'Roboto',system-ui,sans-serif;}
+h1,h2,h3,h4,h5,h6{font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Roboto',system-ui,sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#0ea5e920;}
+a{color:var(--accent);text-decoration:none;text-underline-offset:3px;}
+a:hover{text-decoration:underline;}
+
+.topnav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(3,7,18,0.8);
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid rgba(31,41,55,0.5);
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.topnav .brand{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:-0.01em;
+  color:var(--text);
+}
+.topnav .brand:hover{color:var(--accent);text-decoration:none;}
+.topnav .back{font-size:13px;color:var(--text-dim);}
+.topnav .back:hover{color:var(--accent-bright);}
+
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;}
+
+.scoreboard{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.title-block h1{
+  font-weight:600;
+  font-size:26px;
+  letter-spacing:-0.01em;
+  margin:0 0 4px 0;
+}
+.title-block p{margin:0;color:var(--text-dim);font-size:13px;}
+.hero-stat{
+  background:var(--card-solid);
+  border:1px solid rgba(14,165,233,0.4);
+  border-radius:10px;
+  padding:10px 20px;
+  text-align:center;
+  min-width:140px;
+}
+.hero-stat .num{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:26px;
+  font-weight:600;
+  color:var(--accent-bright);
+  line-height:1.15;
+}
+.hero-stat .lbl{font-size:11px;color:var(--text-dim);margin-top:2px;letter-spacing:0.3px;text-transform:uppercase;}
+
+.season-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px;}
+.season-tab{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  padding:8px 16px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text-dim);
+  cursor:pointer;
+}
+.season-tab:hover{color:var(--text);border-color:var(--accent);}
+.season-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;}
+@media(max-width:640px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+.kpi-tile{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+.kpi-tile .kpi-val{font-family:'IBM Plex Sans',sans-serif;font-size:24px;font-weight:600;color:var(--text);}
+.kpi-tile .kpi-lbl{font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.kpi-tile .kpi-sub{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  margin-top:16px;
+}
+.card h2{font-size:16px;font-weight:600;margin:0 0 4px 0;letter-spacing:-0.01em;}
+.card .card-sub{font-size:12px;color:var(--text-dim);margin:0 0 14px 0;}
+.small-dim{color:var(--text-dim);font-size:12px;}
+.empty-note{color:var(--text-dimmer);font-size:13px;padding:10px 0;}
+
+/* Leaderboard */
+.leader-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 4px;
+  border-bottom:1px solid rgba(31,41,55,0.5);
+  cursor:pointer;
+  border-radius:8px;
+}
+.leader-row:hover{background:rgba(255,255,255,0.03);}
+.leader-row:last-child{border-bottom:none;}
+.expand-caret{display:inline-block;font-size:10px;color:var(--text-dimmer);transition:transform .15s ease;}
+.leader-row.expanded .expand-caret{transform:rotate(-180deg);}
+.leader-detail{
+  background:var(--card-solid);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  margin:0 0 10px 0;
+}
+.rank-badge{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:13px;
+  background:var(--card-solid);color:var(--text-dim);border:1px solid var(--border);
+  flex-shrink:0;
+}
+.rank-badge.gold{background:rgba(234,179,8,0.15);color:var(--gold);border-color:rgba(234,179,8,0.4);}
+.rank-badge.silver{background:rgba(148,163,184,0.15);color:var(--silver);border-color:rgba(148,163,184,0.4);}
+.rank-badge.bronze{background:rgba(217,119,6,0.15);color:var(--bronze);border-color:rgba(217,119,6,0.4);}
+.leader-main{flex:1;min-width:0;}
+.leader-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;color:var(--text);}
+.leader-mpc{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
+.leader-record{text-align:right;flex-shrink:0;}
+.leader-pct{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:16px;color:var(--accent-bright);}
+.leader-wl{font-size:11px;color:var(--text-dim);}
+.leader-bar-wrap{width:60px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;}
+.leader-bar{height:100%;background:var(--accent);}
+
+/* Category bars */
+.cat-row{display:flex;align-items:center;gap:10px;padding:7px 0;}
+.cat-label{width:130px;flex-shrink:0;font-size:12.5px;color:var(--text-dim);}
+.cat-track{flex:1;height:16px;background:rgba(31,41,55,0.6);border-radius:4px;overflow:hidden;position:relative;}
+.cat-fill{height:100%;border-radius:4px;}
+.cat-fill.above{background:var(--accent);}
+.cat-fill.below{background:var(--text-dimmer);}
+.cat-pct{width:56px;flex-shrink:0;text-align:right;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:600;color:var(--text);}
+.cat-n{font-size:10.5px;color:var(--text-dimmer);width:48px;flex-shrink:0;}
+
+/* Weekly log */
+.week-block{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:var(--card-solid);}
+.week-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.week-title{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;}
+.week-pays{font-size:11px;color:var(--text-dimmer);}
+.full-hit-banner{
+  background:linear-gradient(90deg,rgba(234,179,8,0.18),rgba(14,165,233,0.12));
+  border:1px solid rgba(234,179,8,0.4);
+  color:var(--gold);
+  font-size:12px;font-weight:600;
+  border-radius:6px;padding:5px 10px;margin-bottom:8px;
+}
+.pick-line{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:13px;border-top:1px dashed rgba(31,41,55,0.5);}
+.pick-line:first-of-type{border-top:none;}
+.result-dot{
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;
+}
+.result-dot.win{background:var(--good);}
+.result-dot.loss{background:var(--bad);}
+.result-dot.pending{background:var(--card);border:1px solid var(--border);}
+.pick-person{font-weight:600;color:var(--text);flex-shrink:0;width:78px;}
+.pick-play{color:var(--text-dim);flex:1;}
+.pick-cat{color:var(--text-dimmer);font-size:11px;flex-shrink:0;}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+button{
+  font-family:'Roboto',sans-serif;font-size:13px;border-radius:8px;
+  border:1px solid var(--border);padding:8px 14px;background:var(--card-solid);color:var(--text);
+  cursor:pointer;
+}
+button:hover{border-color:var(--accent);color:var(--accent-bright);}
+button.primary{background:var(--accent);color:#fff;border:none;}
+button.primary:hover{background:var(--accent-hover);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="https://jakerheingold.ai">Jake Rheingold</a>
+  <a class="back" href="https://jakerheingold.ai#builds">&larr; Back to jakerheingold.ai</a>
+</div>
+
+<div class="wrap">
+
+  <div class="scoreboard">
+    <div class="title-block">
+      <h1>Echo Chamber Group Parlays</h1>
+      <p>9 friends, 1 leg each, one shared 9-leg parlay every week</p>
+    </div>
+    <div class="hero-stat">
+      <div class="num" id="heroEarnings">$0</div>
+      <div class="lbl">All-Time Earnings</div>
+    </div>
+  </div>
+
+  <div class="season-tabs" id="seasonTabs"></div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card">
+    <h2>Leaderboard</h2>
+    <p class="card-sub" id="leaderboardSub">Ranked by win rate.</p>
+    <div id="leaderboardBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>Category Performance</h2>
+    <p class="card-sub">Group-wide win rate by bet type — where this group actually makes money.</p>
+    <div id="categoryBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>Week by Week</h2>
+    <p class="card-sub" id="weeklySub">Every leg, every week.</p>
+    <div id="weeklyBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>About</h2>
+    <p class="small-dim">Data comes straight from the group's Google Sheet — picks are still entered there every week. This page re-pulls it on a schedule, so it may lag the sheet by a bit.</p>
+    <p class="small-dim" id="freshness" style="margin-top:6px;"></p>
+  </div>
+
+</div>
+
+<script>
+const DATA = {"generated": "2026-09-15", "generated_at": "2026-09-15T16:14:01.476801+00:00", "people": ["Smith", "Ben", "Kaiser", "Orlan", "Tuaty", "Tony", "Dilts", "Snake", "Rheingold"], "seasons": {"2024-2025": {"summary": {"all_time_pct": null, "earnings": 7390.35}, "winnings": {"wager_per": 5.0, "bettors": 9, "risk_per_week": 45.0, "weeks": 18, "total_risk": 810.0, "full_hits": 1, "winnings": 7390.35}, "win_pct_by_person": {}, "detail": null}, "2025-2026": {"summary": {"all_time_pct": 0.4815, "earnings": 0.0}, "winnings": {"wager_per": 10.0, "bettors": 9, "risk_per_week": 90.0, "weeks": 18, "total_risk": 1620.0, "full_hits": 0, "winnings": 0.0}, "win_pct_by_person": {"Smith": 0.5, "Ben": 0.5, "Kaiser": 0.5, "Orlan": 0.3333, "Tuaty": 0.44439999999999996, "Tony": 0.5556, "Dilts": 0.5, "Snake": 0.5, "Rheingold": 0.5}, "detail": {"has_detail": true, "people": ["Smith", "Ben", "Kaiser", "Orlan", "Tuaty", "Tony", "Dilts", "Snake", "Rheingold"], "weekly": [{"week": 1, "picks": [{"person": "Smith", "play": "Austin Ekeler O 24.5 rush yards -115", "result": "H", "category": "Rush Yards"}, {"person": "Ben", "play": "Zay O 4.5 receptions -130", "result": "H", "category": "Receptions"}, {"person": "Kaiser", "play": "Tyreek o5.5 catches -110", "result": "M", "category": "Receptions"}, {"person": "Orlan", "play": "Braelon Allen o 27.5 rushing -110", "result": "M", "category": "Rush Yards"}, {"person": "Tuaty", "play": "Kraft  O 3.5 rec +105 dickheads", "result": "M", "category": "Receptions"}, {"person": "Tony", "play": "Jeudy O 4.5 rec -140", "result": "H", "category": "Receptions"}, {"person": "Dilts", "play": "Egbuka o 56.5 rec yards -115", "result": "H", "category": "Recieving Yards"}, {"person": "Snake", "play": "Ridley o 49.5 rec yards -110", "result": "M", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Kyler 25+ rushing yards -125", "result": "H", "category": "Rush Yards"}], "all_hit": false, "fully_graded": true}, {"week": 2, "picks": [{"person": "Smith", "play": "Pickens O 56.5", "result": "H", "category": "Recieving Yards"}, {"person": "Ben", "play": "Chase 80+ yards", "result": "H", "category": "Recieving Yards"}, {"person": "Kaiser", "play": "Bills -6.5 jets suck", "result": "H", "category": "Spread"}, {"person": "Orlan", "play": "Penix O 224.5 yds -115", "result": "M", "category": "Passing Yards"}, {"person": "Tuaty", "play": "Birds -120 something is wrong with the chiefs", "result": "H", "category": "ML"}, {"person": "Tony", "play": "DK Metcalf O 65.5 rec yards", "result": "M", "category": "Recieving Yards"}, {"person": "Dilts", "play": "Trevor Lawrence o 244.5 passing yards", "result": "H", "category": "Passing Yards"}, {"person": "Snake", "play": "Broncos -1", "result": "M", "category": "Spread"}, {"person": "Rheingold", "play": "Ridley O4.5 receptions -120", "result": "M", "category": "Receptions"}], "all_hit": false, "fully_graded": true}, {"week": 3, "picks": [{"person": "Smith", "play": "Kamara O 3.5 rec", "result": "M", "category": "Receptions"}, {"person": "Ben", "play": "Saquon to have 80+ rushing yards", "result": "M", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Browning under 240 pass yards", "result": "H", "category": "Passing Yards"}, {"person": "Orlan", "play": "Mccaffrey O 4.5 receptions", "result": "H", "category": "Receptions"}, {"person": "Tuaty", "play": "Goff O 1.5 Pass TDs", "result": "M", "category": "Pass TDs"}, {"person": "Tony", "play": "Etienne O 55.5 rushing yards", "result": "H", "category": "Rush Yards"}, {"person": "Dilts", "play": "Gibbs o22.5 receiving yards", "result": "H", "category": "Recieving Yards"}, {"person": "Snake", "play": "Warren over receiving yards", "result": "H", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Odunze O4.5 catches", "result": "M", "category": "Receptions"}], "all_hit": false, "fully_graded": true}, {"week": 4, "picks": [{"person": "Smith", "play": "Packers w points", "result": "M", "category": "Spread"}, {"person": "Ben", "play": "Jacobs over 73.5", "result": "H", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Puka O 7.5 catches", "result": "H", "category": "Receptions"}, {"person": "Orlan", "play": "", "result": "M", "category": null}, {"person": "Tuaty", "play": "Hurts anytime -130", "result": "M", "category": "ATTD"}, {"person": "Tony", "play": "James Cook anytime TD", "result": "H", "category": "ATTD"}, {"person": "Dilts", "play": "Olave o60.5 rec yards", "result": "M", "category": "Recieving Yards"}, {"person": "Snake", "play": "Ladd over receiving yards", "result": "M", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Maye 200+ passing yards -145", "result": "H", "category": "Passing Yards"}], "all_hit": false, "fully_graded": true}, {"week": 5, "picks": [{"person": "Smith", "play": "Hurts anytime", "result": "M", "category": "ATTD"}, {"person": "Ben", "play": "King Henry over 79.5 rush yards", "result": "M", "category": "Rush Yards"}, {"person": "Kaiser", "play": "waddle O 5.5 catches", "result": "H", "category": "Receptions"}, {"person": "Orlan", "play": "Diggs O 4.5 receptions", "result": "H", "category": "Receptions"}, {"person": "Tuaty", "play": "Dallas -120", "result": "H", "category": "ML"}, {"person": "Tony", "play": "Cam Skattebo anytime TD", "result": "M", "category": "ATTD"}, {"person": "Dilts", "play": "Maye o rushing yards", "result": "M", "category": "Rush Yards"}, {"person": "Snake", "play": "LaPorta over receiving", "result": "H", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Josh Allen O 29.5 rushing yards", "result": "H", "category": "Rush Yards"}], "all_hit": false, "fully_graded": true}, {"week": 6, "picks": [{"person": "Smith", "play": "Bills w points", "result": "M", "category": "Spread"}, {"person": "Ben", "play": "Cowboys -1", "result": "M", "category": "Spread"}, {"person": "Kaiser", "play": "Waller O3.5 catches", "result": "M", "category": "Receptions"}, {"person": "Orlan", "play": "Rodgers O 1.5 TDs +115", "result": "H", "category": "Pass TDs"}, {"person": "Tuaty", "play": "Rams over 27.5 total points +105", "result": "M", "category": "O/U Points"}, {"person": "Tony", "play": "Pitts O 3.5 Rec", "result": "M", "category": "Receptions"}, {"person": "Dilts", "play": "Egbuka o75.5 yards", "result": "M", "category": "Recieving Yards"}, {"person": "Snake", "play": "Brian Thomas over yards", "result": "H", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Achane O31.5 receiving yards", "result": "M", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 7, "picks": [{"person": "Smith", "play": "Evan Engram O 28.5", "result": "H", "category": "Recieving Yards"}, {"person": "Ben", "play": "Patriots -4", "result": "H", "category": "Spread"}, {"person": "Kaiser", "play": "", "result": "M", "category": null}, {"person": "Orlan", "play": "Treveyon O 34.5 rushing -115", "result": "M", "category": "Rush Yards"}, {"person": "Tuaty", "play": "Birds -135", "result": "H", "category": "ML"}, {"person": "Tony", "play": "Colts +2", "result": "H", "category": "Spread"}, {"person": "Dilts", "play": "judkins o rushing yards", "result": "H", "category": "Rush Yards"}, {"person": "Snake", "play": "Vidal over rushing yards", "result": "M", "category": "Rush Yards"}, {"person": "Rheingold", "play": "Rashee O63.5 receiving", "result": "M", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 8, "picks": [{"person": "Smith", "play": "Chase brown O rush yards", "result": "H", "category": "Rush Yards"}, {"person": "Ben", "play": "Dak over 1.5 TDs", "result": "M", "category": "Pass TDs"}, {"person": "Kaiser", "play": "Bijan rush/rec over", "result": "M", "category": "Rush/Rec Combo"}, {"person": "Orlan", "play": "Swift O 55.5 rushing", "result": "M", "category": "Rush Yards"}, {"person": "Tuaty", "play": "SF +110", "result": "M", "category": "ML"}, {"person": "Tony", "play": "Javonte Williams anytime TD", "result": "H", "category": "ATTD"}, {"person": "Dilts", "play": "Jamarr chase o receptions", "result": "H", "category": "Receptions"}, {"person": "Snake", "play": "Over yards and anytime touchdown for whatever TE Kaiser doesn't start", "result": "M", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Sutton O58.5 receiving", "result": "H", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 9, "picks": [{"person": "Smith", "play": "Drake maye O 223.5 pass yards", "result": "H", "category": "Passing Yards"}, {"person": "Ben", "play": "Cowboys -1.5", "result": "M", "category": "Spread"}, {"person": "Kaiser", "play": "Herbert O 244.5 pass yards", "result": "H", "category": "Passing Yards"}, {"person": "Orlan", "play": "Rodgers O 1.5 TDs -130", "result": "M", "category": "Pass TDs"}, {"person": "Tuaty", "play": "Mahomes over rush yds", "result": "M", "category": "Rush Yards"}, {"person": "Tony", "play": "Broncos +3", "result": "H", "category": "Spread"}, {"person": "Dilts", "play": "Taylor O rushing yards", "result": "M", "category": "Rush Yards"}, {"person": "Snake", "play": "Rome over receptions", "result": "M", "category": "Receptions"}, {"person": "Rheingold", "play": "Gibbs O receiving yards", "result": "M", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 10, "picks": [{"person": "Smith", "play": "Bills -8.5", "result": "M", "category": "Spread"}, {"person": "Ben", "play": "Rome O 50 receiving yards", "result": "H", "category": "Recieving Yards"}, {"person": "Kaiser", "play": "James cook O 99.5 rush/rec", "result": "M", "category": "Rush/Rec Combo"}, {"person": "Orlan", "play": "Ravens -4", "result": "H", "category": "Spread"}, {"person": "Tuaty", "play": "TB -2.5", "result": "M", "category": "Spread"}, {"person": "Tony", "play": "JJ O 5.5 rec", "result": "M", "category": "Receptions"}, {"person": "Dilts", "play": "Puka over receptions", "result": "M", "category": "Receptions"}, {"person": "Snake", "play": "Loveland O 2.5 rec", "result": "H", "category": "Receptions"}, {"person": "Rheingold", "play": "Rachaad White O3.5 receptions", "result": "H", "category": "Receptions"}], "all_hit": false, "fully_graded": true}, {"week": 11, "picks": [{"person": "Smith", "play": "Pack -6.5 ( bought 1/2 pt)", "result": "H", "category": "Spread"}, {"person": "Ben", "play": "Henry over 73.5 rush yards", "result": "H", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Jettas O 5.5 receptions", "result": "M", "category": "Receptions"}, {"person": "Orlan", "play": "Gibbs O 22.5 receiving", "result": "H", "category": "Recieving Yards"}, {"person": "Tuaty", "play": "Goedert over receptions", "result": "M", "category": "Receptions"}, {"person": "Tony", "play": "Chargers ML", "result": "M", "category": "ML"}, {"person": "Dilts", "play": "Jameis over yards", "result": "M", "category": "Passing Yards"}, {"person": "Snake", "play": "Loveland over rec - run it back", "result": "H", "category": "Receptions"}, {"person": "Rheingold", "play": "Watson O22.5 longest reception", "result": "M", "category": "Longest Reception"}], "all_hit": false, "fully_graded": true}, {"week": 12, "picks": [{"person": "Smith", "play": "Mark Andrews O Rec yards", "result": "M", "category": "Recieving Yards"}, {"person": "Ben", "play": "Ken Walker over 60.5 rushing yards", "result": "H", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Cam Ward O 0.5 pass TD -140", "result": "H", "category": "Pass TDs"}, {"person": "Orlan", "play": "Bijan O 41.5 receiving", "result": "M", "category": "Recieving Yards"}, {"person": "Tuaty", "play": "Davante anytime", "result": "H", "category": "ATTD"}, {"person": "Tony", "play": "Bears moneyline", "result": "H", "category": "ML"}, {"person": "Dilts", "play": "Gibbs o28.5 rec yards", "result": "H", "category": "Recieving Yards"}, {"person": "Snake", "play": "Loveland - run it back", "result": "H", "category": "Receptions"}, {"person": "Rheingold", "play": "Odunze O receiving yards", "result": "H", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 13, "picks": [{"person": "Smith", "play": "Dolphins -3.5 at -135 / dolphins ML", "result": "H", "category": "Spread"}, {"person": "Ben", "play": "Lions -2.5/Lions ML", "result": "M", "category": "Spread"}, {"person": "Kaiser", "play": "Bucky U 40.5 rush yards/Dallas-KC U 56.5 -155", "result": "M", "category": "Rush Yards"}, {"person": "Orlan", "play": "Pearsall O receptions/ Henderson O 50 rush yards", "result": "M", "category": "Receptions"}, {"person": "Tuaty", "play": "Pickens O 75.5 rec yards/ O 65 rec yards", "result": "H", "category": "Recieving Yards"}, {"person": "Tony", "play": "Chase brown O 51.5 rushing yards /  O 40 rushing yards", "result": "H", "category": "Rush Yards"}, {"person": "Dilts", "play": "Mahomes o22.5 rushing yards/  O 41.5 GB/DET", "result": "H", "category": "Rush Yards"}, {"person": "Snake", "play": "Loveland - run it back / O 25 rec yards", "result": "M", "category": "Receptions"}, {"person": "Rheingold", "play": "Gesicki O yards / O 25 rec yards", "result": "M", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 14, "picks": [{"person": "Smith", "play": "Denver -6.5 at -135", "result": "H", "category": "Spread"}, {"person": "Ben", "play": "Ravens -3 (adjusted line)", "result": "M", "category": "Spread"}, {"person": "Kaiser", "play": "Michael Wilson O 5.5 catches", "result": "H", "category": "Receptions"}, {"person": "Orlan", "play": "Caleb O 18.5 rushing", "result": "M", "category": "Rush Yards"}, {"person": "Tuaty", "play": "Strange over receptions", "result": "M", "category": "Receptions"}, {"person": "Tony", "play": "Bijan O 65 rushing yards", "result": "H", "category": "Rush Yards"}, {"person": "Dilts", "play": "James cook O rush and Rec", "result": "M", "category": "Rush/Rec Combo"}, {"person": "Snake", "play": "Waddle over yards", "result": "M", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Bucky O rush yards", "result": "M", "category": "Rush Yards"}], "all_hit": false, "fully_graded": true}, {"week": 15, "picks": [{"person": "Smith", "play": "Bears -6.5 -135", "result": "H", "category": "Spread"}, {"person": "Ben", "play": "Cowboys -3 (adjusted line)", "result": "M", "category": "Spread"}, {"person": "Kaiser", "play": "Michael Wilson O 64.5", "result": "M", "category": "Recieving Yards"}, {"person": "Orlan", "play": "Pats ML", "result": "M", "category": "ML"}, {"person": "Tuaty", "play": "Jakobi Over 4.5 rec", "result": "H", "category": "Receptions"}, {"person": "Tony", "play": "Brissett O 225 passing yards", "result": "H", "category": "Passing Yards"}, {"person": "Dilts", "play": "Achane o 28.5 receiving", "result": "H", "category": "Recieving Yards"}, {"person": "Snake", "play": "Rivers under 27.5 attempts", "result": "H", "category": "Pass Attempts"}, {"person": "Rheingold", "play": "Jamar Chase O 88.5 rec yards", "result": "H", "category": "Recieving Yards"}], "all_hit": false, "fully_graded": true}, {"week": 16, "picks": [{"person": "Smith", "play": "Bills -9.5", "result": "M", "category": "Spread"}, {"person": "Ben", "play": "Henry 80+ rushing yards", "result": "H", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Dolphins u 21.5 points", "result": "H", "category": "O/U Points"}, {"person": "Orlan", "play": "Ewers O 5.5 rushing", "result": "M", "category": "Rush Yards"}, {"person": "Tuaty", "play": "Pickens over 4.5 rec", "result": "H", "category": "Receptions"}, {"person": "Tony", "play": "Broncos ML", "result": "M", "category": "ML"}, {"person": "Dilts", "play": "shough o22.5 rushing", "result": "M", "category": "Rush Yards"}, {"person": "Snake", "play": "Egbuka o receiving yards", "result": "H", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "James cook Anytime", "result": "H", "category": "ATTD"}], "all_hit": false, "fully_graded": true}, {"week": 17, "picks": [{"person": "Smith", "play": "Rams -6.5 -135", "result": "M", "category": "Spread"}, {"person": "Ben", "play": "Treveyon over 46.5 rushing", "result": "H", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Jags -4", "result": "H", "category": "Spread"}, {"person": "Orlan", "play": "Raiders under 20.5 points", "result": "H", "category": "O/U Points"}, {"person": "Tuaty", "play": "Chase brown over 54.5", "result": "H", "category": "Rush Yards"}, {"person": "Tony", "play": "Steelers -3", "result": "M", "category": "Spread"}, {"person": "Dilts", "play": "James Cook anytime", "result": "M", "category": "ATTD"}, {"person": "Snake", "play": "Chase over yards", "result": "M", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Trevor O 1.5 pass TDs", "result": "M", "category": "Pass TDs"}], "all_hit": false, "fully_graded": true}, {"week": 18, "picks": [{"person": "Smith", "play": "Cowboys -2.5", "result": "M", "category": "Spread"}, {"person": "Ben", "play": "Ravens ML", "result": "M", "category": "ML"}, {"person": "Kaiser", "play": "Titans +13.5", "result": "M", "category": "Spread"}, {"person": "Orlan", "play": "Rodgers O 1.5 TDs", "result": "M", "category": "Pass TDs"}, {"person": "Tuaty", "play": "Gibbs over 3.5 rec", "result": "M", "category": "Receptions"}, {"person": "Tony", "play": "Pollard O 65 rushing yards", "result": "M", "category": "Rush Yards"}, {"person": "Dilts", "play": "Loveland o3.5 catches", "result": "H", "category": "Receptions"}, {"person": "Snake", "play": "McBride over yards", "result": "H", "category": "Recieving Yards"}, {"person": "Rheingold", "play": "Trevor O1.5 pass TDs", "result": "H", "category": "Pass TDs"}], "all_hit": false, "fully_graded": true}], "person_stats": {"Smith": {"wins": 9, "losses": 9, "total": 18, "win_pct": 0.5, "categories": {"Rush Yards": {"wins": 2, "losses": 0}, "Recieving Yards": {"wins": 2, "losses": 1}, "Receptions": {"wins": 0, "losses": 1}, "Spread": {"wins": 4, "losses": 6}, "ATTD": {"wins": 0, "losses": 1}, "Passing Yards": {"wins": 1, "losses": 0}}, "mpc": "Spread", "mpc_count": 10, "mpc_wins": 4, "mpc_pct": 0.4}, "Ben": {"wins": 9, "losses": 9, "total": 18, "win_pct": 0.5, "categories": {"Receptions": {"wins": 1, "losses": 0}, "Recieving Yards": {"wins": 2, "losses": 0}, "Rush Yards": {"wins": 5, "losses": 2}, "Spread": {"wins": 1, "losses": 5}, "Pass TDs": {"wins": 0, "losses": 1}, "ML": {"wins": 0, "losses": 1}}, "mpc": "Rush Yards", "mpc_count": 7, "mpc_wins": 5, "mpc_pct": 0.7142857142857143}, "Kaiser": {"wins": 9, "losses": 9, "total": 18, "win_pct": 0.5, "categories": {"Receptions": {"wins": 3, "losses": 3}, "Spread": {"wins": 2, "losses": 1}, "Passing Yards": {"wins": 2, "losses": 0}, "Rush/Rec Combo": {"wins": 0, "losses": 2}, "Pass TDs": {"wins": 1, "losses": 0}, "Rush Yards": {"wins": 0, "losses": 1}, "Recieving Yards": {"wins": 0, "losses": 1}, "O/U Points": {"wins": 1, "losses": 0}}, "mpc": "Receptions", "mpc_count": 6, "mpc_wins": 3, "mpc_pct": 0.5}, "Orlan": {"wins": 6, "losses": 12, "total": 18, "win_pct": 0.3333333333333333, "categories": {"Rush Yards": {"wins": 0, "losses": 5}, "Passing Yards": {"wins": 0, "losses": 1}, "Receptions": {"wins": 2, "losses": 1}, "Pass TDs": {"wins": 1, "losses": 2}, "Spread": {"wins": 1, "losses": 0}, "Recieving Yards": {"wins": 1, "losses": 1}, "ML": {"wins": 0, "losses": 1}, "O/U Points": {"wins": 1, "losses": 0}}, "mpc": "Rush Yards", "mpc_count": 5, "mpc_wins": 0, "mpc_pct": 0.0}, "Tuaty": {"wins": 8, "losses": 10, "total": 18, "win_pct": 0.4444444444444444, "categories": {"Receptions": {"wins": 2, "losses": 4}, "ML": {"wins": 3, "losses": 1}, "Pass TDs": {"wins": 0, "losses": 1}, "ATTD": {"wins": 1, "losses": 1}, "O/U Points": {"wins": 0, "losses": 1}, "Rush Yards": {"wins": 1, "losses": 1}, "Spread": {"wins": 0, "losses": 1}, "Recieving Yards": {"wins": 1, "losses": 0}}, "mpc": "Receptions", "mpc_count": 6, "mpc_wins": 2, "mpc_pct": 0.3333333333333333}, "Tony": {"wins": 10, "losses": 8, "total": 18, "win_pct": 0.5555555555555556, "categories": {"Receptions": {"wins": 1, "losses": 2}, "Recieving Yards": {"wins": 0, "losses": 1}, "Rush Yards": {"wins": 3, "losses": 1}, "ATTD": {"wins": 2, "losses": 1}, "Spread": {"wins": 2, "losses": 1}, "ML": {"wins": 1, "losses": 2}, "Passing Yards": {"wins": 1, "losses": 0}}, "mpc": "Rush Yards", "mpc_count": 4, "mpc_wins": 3, "mpc_pct": 0.75}, "Dilts": {"wins": 9, "losses": 9, "total": 18, "win_pct": 0.5, "categories": {"Recieving Yards": {"wins": 4, "losses": 2}, "Passing Yards": {"wins": 1, "losses": 1}, "Rush Yards": {"wins": 2, "losses": 3}, "Receptions": {"wins": 2, "losses": 1}, "Rush/Rec Combo": {"wins": 0, "losses": 1}, "ATTD": {"wins": 0, "losses": 1}}, "mpc": "Recieving Yards", "mpc_count": 6, "mpc_wins": 4, "mpc_pct": 0.6666666666666666}, "Snake": {"wins": 9, "losses": 9, "total": 18, "win_pct": 0.5, "categories": {"Recieving Yards": {"wins": 5, "losses": 5}, "Spread": {"wins": 0, "losses": 1}, "Rush Yards": {"wins": 0, "losses": 1}, "Receptions": {"wins": 3, "losses": 2}, "Pass Attempts": {"wins": 1, "losses": 0}}, "mpc": "Recieving Yards", "mpc_count": 10, "mpc_wins": 5, "mpc_pct": 0.5}, "Rheingold": {"wins": 9, "losses": 9, "total": 18, "win_pct": 0.5, "categories": {"Rush Yards": {"wins": 2, "losses": 1}, "Receptions": {"wins": 1, "losses": 2}, "Passing Yards": {"wins": 1, "losses": 0}, "Recieving Yards": {"wins": 3, "losses": 4}, "Longest Reception": {"wins": 0, "losses": 1}, "ATTD": {"wins": 1, "losses": 0}, "Pass TDs": {"wins": 1, "losses": 1}}, "mpc": "Recieving Yards", "mpc_count": 7, "mpc_wins": 3, "mpc_pct": 0.42857142857142855}}, "category_stats": {"Rush Yards": {"wins": 15, "losses": 15, "total": 30, "win_pct": 0.5}, "Recieving Yards": {"wins": 18, "losses": 15, "total": 33, "win_pct": 0.5454545454545454}, "Receptions": {"wins": 15, "losses": 16, "total": 31, "win_pct": 0.4838709677419355}, "Spread": {"wins": 10, "losses": 15, "total": 25, "win_pct": 0.4}, "ATTD": {"wins": 4, "losses": 4, "total": 8, "win_pct": 0.5}, "Passing Yards": {"wins": 6, "losses": 2, "total": 8, "win_pct": 0.75}, "Pass TDs": {"wins": 3, "losses": 5, "total": 8, "win_pct": 0.375}, "ML": {"wins": 4, "losses": 5, "total": 9, "win_pct": 0.4444444444444444}, "Rush/Rec Combo": {"wins": 0, "losses": 3, "total": 3, "win_pct": 0.0}, "O/U Points": {"wins": 2, "losses": 1, "total": 3, "win_pct": 0.6666666666666666}, "Pass Attempts": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0}, "Longest Reception": {"wins": 0, "losses": 1, "total": 1, "win_pct": 0.0}}, "totals": {"wins": 78, "losses": 84, "win_pct": 0.48148148148148145, "full_hit_weeks": 0, "graded_weeks": 18}}}, "2026-2027": {"summary": {"all_time_pct": null, "earnings": 0.0}, "winnings": {"wager_per": null, "bettors": null, "risk_per_week": null, "weeks": null, "total_risk": null, "full_hits": null, "winnings": 0.0}, "win_pct_by_person": {}, "detail": {"has_detail": true, "people": ["Smith", "Ben", "Kaiser", "Orlan", "Tuaty", "Tony", "Dilts", "Snake", "Rheingold"], "weekly": [{"week": 1, "picks": [{"person": "Smith", "play": "Burden O 4.5 rec", "result": "H", "category": "Receptions"}, {"person": "Ben", "play": "Henry over 79.5 rushing", "result": "H", "category": "Rush Yards"}, {"person": "Kaiser", "play": "Herbert o 233 yards", "result": "M", "category": "Passing Yards"}, {"person": "Orlan", "play": "Lawrence O 1.5 passing TD", "result": "H", "category": "Pass TDs"}, {"person": "Tuaty", "play": "Goedert Over 3.5 rec", "result": "H", "category": "Receptions"}, {"person": "Tony", "play": "Kelce O 3.5 rec", "result": "M", "category": "Receptions"}, {"person": "Dilts", "play": "Ladd o rec yards", "result": "H", "category": "Recieving Yards"}, {"person": "Snake", "play": "Malik Willis over pass yards", "result": "H", "category": "Passing Yards"}, {"person": "Rheingold", "play": "Kyler O rushing yards", "result": "M", "category": "Rush Yards"}], "all_hit": false, "fully_graded": true}, {"week": 2, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 3, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 4, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 5, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 6, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 7, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 8, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 9, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 10, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 11, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 12, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 13, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 14, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 15, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 16, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 17, "picks": [], "all_hit": false, "fully_graded": false}, {"week": 18, "picks": [], "all_hit": false, "fully_graded": false}], "person_stats": {"Smith": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0, "categories": {"Receptions": {"wins": 1, "losses": 0}}, "mpc": "Receptions", "mpc_count": 1, "mpc_wins": 1, "mpc_pct": 1.0}, "Ben": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0, "categories": {"Rush Yards": {"wins": 1, "losses": 0}}, "mpc": "Rush Yards", "mpc_count": 1, "mpc_wins": 1, "mpc_pct": 1.0}, "Kaiser": {"wins": 0, "losses": 1, "total": 1, "win_pct": 0.0, "categories": {"Passing Yards": {"wins": 0, "losses": 1}}, "mpc": "Passing Yards", "mpc_count": 1, "mpc_wins": 0, "mpc_pct": 0.0}, "Orlan": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0, "categories": {"Pass TDs": {"wins": 1, "losses": 0}}, "mpc": "Pass TDs", "mpc_count": 1, "mpc_wins": 1, "mpc_pct": 1.0}, "Tuaty": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0, "categories": {"Receptions": {"wins": 1, "losses": 0}}, "mpc": "Receptions", "mpc_count": 1, "mpc_wins": 1, "mpc_pct": 1.0}, "Tony": {"wins": 0, "losses": 1, "total": 1, "win_pct": 0.0, "categories": {"Receptions": {"wins": 0, "losses": 1}}, "mpc": "Receptions", "mpc_count": 1, "mpc_wins": 0, "mpc_pct": 0.0}, "Dilts": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0, "categories": {"Recieving Yards": {"wins": 1, "losses": 0}}, "mpc": "Recieving Yards", "mpc_count": 1, "mpc_wins": 1, "mpc_pct": 1.0}, "Snake": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0, "categories": {"Passing Yards": {"wins": 1, "losses": 0}}, "mpc": "Passing Yards", "mpc_count": 1, "mpc_wins": 1, "mpc_pct": 1.0}, "Rheingold": {"wins": 0, "losses": 1, "total": 1, "win_pct": 0.0, "categories": {"Rush Yards": {"wins": 0, "losses": 1}}, "mpc": "Rush Yards", "mpc_count": 1, "mpc_wins": 0, "mpc_pct": 0.0}}, "category_stats": {"Receptions": {"wins": 2, "losses": 1, "total": 3, "win_pct": 0.6666666666666666}, "Rush Yards": {"wins": 1, "losses": 1, "total": 2, "win_pct": 0.5}, "Passing Yards": {"wins": 1, "losses": 1, "total": 2, "win_pct": 0.5}, "Pass TDs": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0}, "Recieving Yards": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0}}, "totals": {"wins": 6, "losses": 3, "win_pct": 0.6666666666666666, "full_hit_weeks": 0, "graded_weeks": 1}}}}, "all_time": {"person_stats": {"Smith": {"wins": 10, "losses": 9, "categories": {"Rush Yards": {"wins": 2, "losses": 0}, "Recieving Yards": {"wins": 2, "losses": 1}, "Receptions": {"wins": 1, "losses": 1}, "Spread": {"wins": 4, "losses": 6}, "ATTD": {"wins": 0, "losses": 1}, "Passing Yards": {"wins": 1, "losses": 0}}, "total": 19, "win_pct": 0.5263157894736842, "mpc": "Spread", "mpc_count": 10, "mpc_wins": 4, "mpc_pct": 0.4}, "Ben": {"wins": 10, "losses": 9, "categories": {"Receptions": {"wins": 1, "losses": 0}, "Recieving Yards": {"wins": 2, "losses": 0}, "Rush Yards": {"wins": 6, "losses": 2}, "Spread": {"wins": 1, "losses": 5}, "Pass TDs": {"wins": 0, "losses": 1}, "ML": {"wins": 0, "losses": 1}}, "total": 19, "win_pct": 0.5263157894736842, "mpc": "Rush Yards", "mpc_count": 8, "mpc_wins": 6, "mpc_pct": 0.75}, "Kaiser": {"wins": 9, "losses": 10, "categories": {"Receptions": {"wins": 3, "losses": 3}, "Spread": {"wins": 2, "losses": 1}, "Passing Yards": {"wins": 2, "losses": 1}, "Rush/Rec Combo": {"wins": 0, "losses": 2}, "Pass TDs": {"wins": 1, "losses": 0}, "Rush Yards": {"wins": 0, "losses": 1}, "Recieving Yards": {"wins": 0, "losses": 1}, "O/U Points": {"wins": 1, "losses": 0}}, "total": 19, "win_pct": 0.47368421052631576, "mpc": "Receptions", "mpc_count": 6, "mpc_wins": 3, "mpc_pct": 0.5}, "Orlan": {"wins": 7, "losses": 12, "categories": {"Rush Yards": {"wins": 0, "losses": 5}, "Passing Yards": {"wins": 0, "losses": 1}, "Receptions": {"wins": 2, "losses": 1}, "Pass TDs": {"wins": 2, "losses": 2}, "Spread": {"wins": 1, "losses": 0}, "Recieving Yards": {"wins": 1, "losses": 1}, "ML": {"wins": 0, "losses": 1}, "O/U Points": {"wins": 1, "losses": 0}}, "total": 19, "win_pct": 0.3684210526315789, "mpc": "Rush Yards", "mpc_count": 5, "mpc_wins": 0, "mpc_pct": 0.0}, "Tuaty": {"wins": 9, "losses": 10, "categories": {"Receptions": {"wins": 3, "losses": 4}, "ML": {"wins": 3, "losses": 1}, "Pass TDs": {"wins": 0, "losses": 1}, "ATTD": {"wins": 1, "losses": 1}, "O/U Points": {"wins": 0, "losses": 1}, "Rush Yards": {"wins": 1, "losses": 1}, "Spread": {"wins": 0, "losses": 1}, "Recieving Yards": {"wins": 1, "losses": 0}}, "total": 19, "win_pct": 0.47368421052631576, "mpc": "Receptions", "mpc_count": 7, "mpc_wins": 3, "mpc_pct": 0.42857142857142855}, "Tony": {"wins": 10, "losses": 9, "categories": {"Receptions": {"wins": 1, "losses": 3}, "Recieving Yards": {"wins": 0, "losses": 1}, "Rush Yards": {"wins": 3, "losses": 1}, "ATTD": {"wins": 2, "losses": 1}, "Spread": {"wins": 2, "losses": 1}, "ML": {"wins": 1, "losses": 2}, "Passing Yards": {"wins": 1, "losses": 0}}, "total": 19, "win_pct": 0.5263157894736842, "mpc": "Receptions", "mpc_count": 4, "mpc_wins": 1, "mpc_pct": 0.25}, "Dilts": {"wins": 10, "losses": 9, "categories": {"Recieving Yards": {"wins": 5, "losses": 2}, "Passing Yards": {"wins": 1, "losses": 1}, "Rush Yards": {"wins": 2, "losses": 3}, "Receptions": {"wins": 2, "losses": 1}, "Rush/Rec Combo": {"wins": 0, "losses": 1}, "ATTD": {"wins": 0, "losses": 1}}, "total": 19, "win_pct": 0.5263157894736842, "mpc": "Recieving Yards", "mpc_count": 7, "mpc_wins": 5, "mpc_pct": 0.7142857142857143}, "Snake": {"wins": 10, "losses": 9, "categories": {"Recieving Yards": {"wins": 5, "losses": 5}, "Spread": {"wins": 0, "losses": 1}, "Rush Yards": {"wins": 0, "losses": 1}, "Receptions": {"wins": 3, "losses": 2}, "Pass Attempts": {"wins": 1, "losses": 0}, "Passing Yards": {"wins": 1, "losses": 0}}, "total": 19, "win_pct": 0.5263157894736842, "mpc": "Recieving Yards", "mpc_count": 10, "mpc_wins": 5, "mpc_pct": 0.5}, "Rheingold": {"wins": 9, "losses": 10, "categories": {"Rush Yards": {"wins": 2, "losses": 2}, "Receptions": {"wins": 1, "losses": 2}, "Passing Yards": {"wins": 1, "losses": 0}, "Recieving Yards": {"wins": 3, "losses": 4}, "Longest Reception": {"wins": 0, "losses": 1}, "ATTD": {"wins": 1, "losses": 0}, "Pass TDs": {"wins": 1, "losses": 1}}, "total": 19, "win_pct": 0.47368421052631576, "mpc": "Recieving Yards", "mpc_count": 7, "mpc_wins": 3, "mpc_pct": 0.42857142857142855}}, "category_stats": {"Rush Yards": {"wins": 16, "losses": 16, "total": 32, "win_pct": 0.5}, "Recieving Yards": {"wins": 19, "losses": 15, "total": 34, "win_pct": 0.5588235294117647}, "Receptions": {"wins": 17, "losses": 17, "total": 34, "win_pct": 0.5}, "Spread": {"wins": 10, "losses": 15, "total": 25, "win_pct": 0.4}, "ATTD": {"wins": 4, "losses": 4, "total": 8, "win_pct": 0.5}, "Passing Yards": {"wins": 7, "losses": 3, "total": 10, "win_pct": 0.7}, "Pass TDs": {"wins": 4, "losses": 5, "total": 9, "win_pct": 0.4444444444444444}, "ML": {"wins": 4, "losses": 5, "total": 9, "win_pct": 0.4444444444444444}, "Rush/Rec Combo": {"wins": 0, "losses": 3, "total": 3, "win_pct": 0.0}, "O/U Points": {"wins": 2, "losses": 1, "total": 3, "win_pct": 0.6666666666666666}, "Pass Attempts": {"wins": 1, "losses": 0, "total": 1, "win_pct": 1.0}, "Longest Reception": {"wins": 0, "losses": 1, "total": 1, "win_pct": 0.0}}, "totals": {"wins": 84, "losses": 87, "win_pct": 0.49122807017543857, "full_hit_weeks": 0, "graded_weeks": 19}, "earnings": 7390.35}};
+
+const RANK_MEDAL = ['gold','silver','bronze'];
+
+function fmtPct(p){ return p==null ? '—' : Math.round(p*100)+'%'; }
+function fmtMoney(v){ return '$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+const seasonKeys = Object.keys(DATA.seasons).sort();
+let currentView = seasonKeys.includes('2026-2027') ? '2026-2027' : (seasonKeys[seasonKeys.length-1] || 'all-time');
+
+function seasonList(){
+  return ['all-time', ...seasonKeys];
+}
+
+function currentPersonStats(){
+  if(currentView === 'all-time') return DATA.all_time.person_stats;
+  const s = DATA.seasons[currentView];
+  return (s && s.detail && s.detail.has_detail) ? s.detail.person_stats : null;
+}
+function currentCategoryStats(){
+  if(currentView === 'all-time') return DATA.all_time.category_stats;
+  const s = DATA.seasons[currentView];
+  return (s && s.detail && s.detail.has_detail) ? s.detail.category_stats : null;
+}
+function currentTotals(){
+  if(currentView === 'all-time') return DATA.all_time.totals;
+  const s = DATA.seasons[currentView];
+  return (s && s.detail && s.detail.has_detail) ? s.detail.totals : null;
+}
+
+function renderTabs(){
+  const el = document.getElementById('seasonTabs');
+  el.innerHTML = '';
+  seasonList().forEach(key=>{
+    const btn = document.createElement('button');
+    btn.className = 'season-tab' + (key===currentView?' active':'');
+    btn.textContent = key === 'all-time' ? 'All-Time' : key;
+    btn.onclick = ()=>{ currentView = key; render(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderKpis(){
+  const el = document.getElementById('kpiRow');
+  const totals = currentTotals();
+  const season = currentView === 'all-time' ? null : DATA.seasons[currentView];
+  const winnings = season ? season.winnings : null;
+
+  const tiles = [];
+  if(totals){
+    tiles.push({val: fmtPct(totals.win_pct), lbl:'Leg Win Rate', sub:`${totals.wins}-${totals.losses} overall`});
+    tiles.push({val:`${totals.full_hit_weeks} / ${totals.graded_weeks}`, lbl:'Full Parlay Hits', sub: totals.graded_weeks ? `${fmtPct(totals.full_hit_weeks/totals.graded_weeks)} of graded weeks` : ''});
+  } else {
+    tiles.push({val:'—', lbl:'Leg Win Rate', sub:'Not graded yet'});
+    tiles.push({val:'—', lbl:'Full Parlay Hits', sub:''});
+  }
+  if(currentView === 'all-time'){
+    tiles.push({val: fmtMoney(DATA.all_time.earnings), lbl:'All-Time Earnings', sub:`across ${seasonKeys.length} seasons`});
+    tiles.push({val: DATA.people.length, lbl:'Bettors', sub: DATA.people.join(', ')});
+  } else {
+    tiles.push({val: winnings ? fmtMoney(winnings.winnings) : '$0.00', lbl:'Season Earnings', sub: winnings ? `${fmtMoney(winnings.total_risk)} risked` : ''});
+    tiles.push({val: winnings && winnings.weeks ? winnings.weeks : '—', lbl:'Weeks', sub: winnings ? `${fmtMoney(winnings.wager_per)}/person/week` : ''});
+  }
+
+  el.innerHTML = tiles.map(t=>`
+    <div class="kpi-tile">
+      <div class="kpi-val">${t.val}</div>
+      <div class="kpi-lbl">${t.lbl}</div>
+      <div class="kpi-sub">${t.sub||''}</div>
+    </div>`).join('');
+}
+
+function isUntrackedSeason(){
+  if(currentView === 'all-time') return false;
+  const s = DATA.seasons[currentView];
+  return !s || !s.detail;
+}
+
+function renderLeaderboard(){
+  const body = document.getElementById('leaderboardBody');
+  const sub = document.getElementById('leaderboardSub');
+  const stats = currentPersonStats();
+  if(!stats){
+    if(isUntrackedSeason()){
+      sub.textContent = `${currentView} predates detailed stat tracking.`;
+      body.innerHTML = '<p class="empty-note">Only season earnings were recorded for this one — no per-leg breakdown exists.</p>';
+    } else {
+      sub.textContent = 'No graded picks for this season yet.';
+      body.innerHTML = '<p class="empty-note">Once legs are graded H/M in the sheet, standings show up here.</p>';
+    }
+    return;
+  }
+  sub.textContent = currentView === 'all-time' ? 'Combined record across every graded season — tap a name for their full category breakdown.' : `Ranked by win rate for ${currentView} — tap a name for their full category breakdown.`;
+  const ranked = DATA.people
+    .map(p=>({person:p, ...stats[p]}))
+    .filter(p=>p.total>0)
+    .sort((a,b)=> (b.win_pct||0)-(a.win_pct||0));
+
+  body.innerHTML = ranked.map((p,i)=>{
+    const medal = RANK_MEDAL[i] ? ` ${RANK_MEDAL[i]}` : '';
+    const detailId = `leader-detail-${p.person}`;
+    const cats = Object.entries(p.categories||{})
+      .map(([cat,rec])=>({cat, ...rec, total:rec.wins+rec.losses, pct: (rec.wins+rec.losses)?rec.wins/(rec.wins+rec.losses):null}))
+      .sort((a,b)=> b.total-a.total || (b.pct||0)-(a.pct||0));
+    const catRows = cats.map(c=>{
+      const pct = Math.round((c.pct||0)*100);
+      const cls = pct>=50 ? 'above' : 'below';
+      return `
+      <div class="cat-row">
+        <div class="cat-label">${c.cat}</div>
+        <div class="cat-track"><div class="cat-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="cat-pct">${pct}%</div>
+        <div class="cat-n">${c.wins}-${c.losses}</div>
+      </div>`;
+    }).join('');
+    return `
+    <div class="leader-row" data-toggle="${detailId}">
+      <div class="rank-badge${medal}">${i+1}</div>
+      <div class="leader-main">
+        <div class="leader-name">${p.person} <span class="expand-caret">▾</span></div>
+        <div class="leader-mpc">${p.mpc ? `Favorite: ${p.mpc} (${p.mpc_count}x, ${fmtPct(p.mpc_pct)})` : 'No repeat category yet'}</div>
+      </div>
+      <div class="leader-record">
+        <div class="leader-pct">${fmtPct(p.win_pct)}</div>
+        <div class="leader-wl">${p.wins}-${p.losses}</div>
+        <div class="leader-bar-wrap"><div class="leader-bar" style="width:${Math.round((p.win_pct||0)*100)}%"></div></div>
+      </div>
+    </div>
+    <div class="leader-detail" id="${detailId}" hidden>
+      <p class="card-sub" style="margin-top:0;">${p.person}'s full category record</p>
+      ${catRows || '<p class="empty-note">No categorized picks.</p>'}
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('.leader-row').forEach(row=>{
+    row.onclick = ()=>{
+      const detail = document.getElementById(row.dataset.toggle);
+      detail.hidden = !detail.hidden;
+      row.classList.toggle('expanded', !detail.hidden);
+    };
+  });
+}
+
+function renderCategories(){
+  const body = document.getElementById('categoryBody');
+  const stats = currentCategoryStats();
+  if(!stats || !Object.keys(stats).length){
+    body.innerHTML = isUntrackedSeason()
+      ? '<p class="empty-note">No category breakdown exists for this season.</p>'
+      : '<p class="empty-note">No graded picks for this season yet.</p>';
+    return;
+  }
+  const rows = Object.entries(stats)
+    .filter(([,r])=>r.total>0)
+    .sort((a,b)=> (b[1].win_pct||0)-(a[1].win_pct||0));
+  body.innerHTML = rows.map(([cat,r])=>{
+    const pct = Math.round((r.win_pct||0)*100);
+    const cls = pct>=50 ? 'above' : 'below';
+    return `
+    <div class="cat-row">
+      <div class="cat-label">${cat}</div>
+      <div class="cat-track"><div class="cat-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="cat-pct">${pct}%</div>
+      <div class="cat-n">${r.wins}-${r.losses}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderWeekly(){
+  const body = document.getElementById('weeklyBody');
+  const sub = document.getElementById('weeklySub');
+  if(currentView === 'all-time'){
+    sub.textContent = 'Pick a season above to see individual weeks.';
+    body.innerHTML = '';
+    return;
+  }
+  const season = DATA.seasons[currentView];
+  if(!season || !season.detail){
+    sub.textContent = isUntrackedSeason() ? `${currentView} predates per-week tracking.` : `No pick data logged for ${currentView} yet.`;
+    body.innerHTML = '';
+    return;
+  }
+  const detail = season.detail;
+  const hasGrading = detail.has_detail;
+  sub.textContent = hasGrading ? `Every leg, every week of ${currentView}.` : `Picks logged so far for ${currentView} — not graded yet.`;
+
+  const weeks = detail.weekly.filter(w=>w.picks.length>0).sort((a,b)=>b.week-a.week);
+  body.innerHTML = weeks.map(wk=>{
+    const banner = hasGrading && wk.all_hit ? '<div class="full-hit-banner">🎉 Full parlay hit this week — everyone cashed</div>' : '';
+    const picks = wk.picks.map(p=>{
+      if(hasGrading){
+        const won = p.result === 'H';
+        return `
+          <div class="pick-line">
+            <div class="result-dot ${won?'win':'loss'}">${won?'✓':'✕'}</div>
+            <div class="pick-person">${p.person}</div>
+            <div class="pick-play">${p.play || '<span class=\"small-dim\">(no pick logged)</span>'}</div>
+            <div class="pick-cat">${p.category||''}</div>
+          </div>`;
+      }
+      return `
+        <div class="pick-line">
+          <div class="result-dot pending">•</div>
+          <div class="pick-person">${p.person}</div>
+          <div class="pick-play">${p.play}</div>
+        </div>`;
+    }).join('');
+    return `
+    <div class="week-block">
+      <div class="week-head">
+        <div class="week-title">Week ${wk.week}</div>
+        <div class="week-pays">${wk.who_pays ? `${wk.who_pays} pays this week` : ''}</div>
+      </div>
+      ${banner}
+      ${picks || '<p class="empty-note">No picks logged.</p>'}
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  document.getElementById('heroEarnings').textContent = fmtMoney(DATA.all_time.earnings);
+  document.getElementById('freshness').textContent = `Last synced from the sheet: ${DATA.generated}.`;
+  renderTabs();
+  renderKpis();
+  renderLeaderboard();
+  renderCategories();
+  renderWeekly();
+}
+
+render();
+</script>
+</body>
+</html>

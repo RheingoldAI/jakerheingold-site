@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echo Chamber Group Parlays</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030712;
+  --card:rgba(23,23,23,0.6);
+  --card-solid:#111827;
+  --border:rgba(31,41,55,0.7);
+  --text:#F3F4F6;
+  --text-dim:#9CA3AF;
+  --text-dimmer:#6B7280;
+  --accent:#0EA5E9;
+  --accent-bright:#38BDF8;
+  --accent-hover:#0284C7;
+  --good:#22C55E;
+  --bad:#EF4444;
+  --gold:#EAB308;
+  --silver:#94A3B8;
+  --bronze:#D97706;
+}
+*{box-sizing:border-box;}
+html{font-family:'Roboto',system-ui,sans-serif;}
+h1,h2,h3,h4,h5,h6{font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Roboto',system-ui,sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#0ea5e920;}
+a{color:var(--accent);text-decoration:none;text-underline-offset:3px;}
+a:hover{text-decoration:underline;}
+
+.topnav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(3,7,18,0.8);
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid rgba(31,41,55,0.5);
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.topnav .brand{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:-0.01em;
+  color:var(--text);
+}
+.topnav .brand:hover{color:var(--accent);text-decoration:none;}
+.topnav .back{font-size:13px;color:var(--text-dim);}
+.topnav .back:hover{color:var(--accent-bright);}
+
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;}
+
+.scoreboard{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.title-block h1{
+  font-weight:600;
+  font-size:26px;
+  letter-spacing:-0.01em;
+  margin:0 0 4px 0;
+}
+.title-block p{margin:0;color:var(--text-dim);font-size:13px;}
+.hero-stat{
+  background:var(--card-solid);
+  border:1px solid rgba(14,165,233,0.4);
+  border-radius:10px;
+  padding:10px 20px;
+  text-align:center;
+  min-width:140px;
+}
+.hero-stat .num{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:26px;
+  font-weight:600;
+  color:var(--accent-bright);
+  line-height:1.15;
+}
+.hero-stat .lbl{font-size:11px;color:var(--text-dim);margin-top:2px;letter-spacing:0.3px;text-transform:uppercase;}
+
+.season-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px;}
+.season-tab{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  padding:8px 16px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text-dim);
+  cursor:pointer;
+}
+.season-tab:hover{color:var(--text);border-color:var(--accent);}
+.season-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;}
+@media(max-width:640px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+.kpi-tile{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+.kpi-tile .kpi-val{font-family:'IBM Plex Sans',sans-serif;font-size:24px;font-weight:600;color:var(--text);}
+.kpi-tile .kpi-lbl{font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.kpi-tile .kpi-sub{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  margin-top:16px;
+}
+.card h2{font-size:16px;font-weight:600;margin:0 0 4px 0;letter-spacing:-0.01em;}
+.card .card-sub{font-size:12px;color:var(--text-dim);margin:0 0 14px 0;}
+.small-dim{color:var(--text-dim);font-size:12px;}
+.empty-note{color:var(--text-dimmer);font-size:13px;padding:10px 0;}
+
+/* Leaderboard */
+.leader-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 4px;
+  border-bottom:1px solid rgba(31,41,55,0.5);
+  cursor:pointer;
+  border-radius:8px;
+}
+.leader-row:hover{background:rgba(255,255,255,0.03);}
+.leader-row:last-child{border-bottom:none;}
+.expand-caret{display:inline-block;font-size:10px;color:var(--text-dimmer);transition:transform .15s ease;}
+.leader-row.expanded .expand-caret{transform:rotate(-180deg);}
+.leader-detail{
+  background:var(--card-solid);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  margin:0 0 10px 0;
+}
+.rank-badge{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:13px;
+  background:var(--card-solid);color:var(--text-dim);border:1px solid var(--border);
+  flex-shrink:0;
+}
+.rank-badge.gold{background:rgba(234,179,8,0.15);color:var(--gold);border-color:rgba(234,179,8,0.4);}
+.rank-badge.silver{background:rgba(148,163,184,0.15);color:var(--silver);border-color:rgba(148,163,184,0.4);}
+.rank-badge.bronze{background:rgba(217,119,6,0.15);color:var(--bronze);border-color:rgba(217,119,6,0.4);}
+.leader-main{flex:1;min-width:0;}
+.leader-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;color:var(--text);}
+.leader-mpc{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
+.leader-record{text-align:right;flex-shrink:0;}
+.leader-pct{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:16px;color:var(--accent-bright);}
+.leader-wl{font-size:11px;color:var(--text-dim);}
+.leader-bar-wrap{width:60px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;}
+.leader-bar{height:100%;background:var(--accent);}
+
+/* Category bars */
+.cat-row{display:flex;align-items:center;gap:10px;padding:7px 0;}
+.cat-label{width:130px;flex-shrink:0;font-size:12.5px;color:var(--text-dim);}
+.cat-track{flex:1;height:16px;background:rgba(31,41,55,0.6);border-radius:4px;overflow:hidden;position:relative;}
+.cat-fill{height:100%;border-radius:4px;}
+.cat-fill.above{background:var(--accent);}
+.cat-fill.below{background:var(--text-dimmer);}
+.cat-pct{width:56px;flex-shrink:0;text-align:right;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:600;color:var(--text);}
+.cat-n{font-size:10.5px;color:var(--text-dimmer);width:48px;flex-shrink:0;}
+
+/* Weekly log */
+.week-block{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:var(--card-solid);}
+.week-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.week-title{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;}
+.week-pays{font-size:11px;color:var(--text-dimmer);}
+.full-hit-banner{
+  background:linear-gradient(90deg,rgba(234,179,8,0.18),rgba(14,165,233,0.12));
+  border:1px solid rgba(234,179,8,0.4);
+  color:var(--gold);
+  font-size:12px;font-weight:600;
+  border-radius:6px;padding:5px 10px;margin-bottom:8px;
+}
+.pick-line{display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:13px;border-top:1px dashed rgba(31,41,55,0.5);}
+.pick-line:first-of-type{border-top:none;}
+.result-dot{
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;
+}
+.result-dot.win{background:var(--good);}
+.result-dot.loss{background:var(--bad);}
+.result-dot.pending{background:var(--card);border:1px solid var(--border);}
+.pick-person{font-weight:600;color:var(--text);flex-shrink:0;width:78px;}
+.pick-play{color:var(--text-dim);flex:1;}
+.pick-cat{color:var(--text-dimmer);font-size:11px;flex-shrink:0;}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+button{
+  font-family:'Roboto',sans-serif;font-size:13px;border-radius:8px;
+  border:1px solid var(--border);padding:8px 14px;background:var(--card-solid);color:var(--text);
+  cursor:pointer;
+}
+button:hover{border-color:var(--accent);color:var(--accent-bright);}
+button.primary{background:var(--accent);color:#fff;border:none;}
+button.primary:hover{background:var(--accent-hover);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="https://jakerheingold.ai">Jake Rheingold</a>
+  <a class="back" href="https://jakerheingold.ai#builds">&larr; Back to jakerheingold.ai</a>
+</div>
+
+<div class="wrap">
+
+  <div class="scoreboard">
+    <div class="title-block">
+      <h1>Echo Chamber Group Parlays</h1>
+      <p>9 friends, 1 leg each, one shared 9-leg parlay every week</p>
+    </div>
+    <div class="hero-stat">
+      <div class="num" id="heroEarnings">$0</div>
+      <div class="lbl">All-Time Earnings</div>
+    </div>
+  </div>
+
+  <div class="season-tabs" id="seasonTabs"></div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card">
+    <h2>Leaderboard</h2>
+    <p class="card-sub" id="leaderboardSub">Ranked by win rate.</p>
+    <div id="leaderboardBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>Category Performance</h2>
+    <p class="card-sub">Group-wide win rate by bet type — where this group actually makes money.</p>
+    <div id="categoryBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>Week by Week</h2>
+    <p class="card-sub" id="weeklySub">Every leg, every week.</p>
+    <div id="weeklyBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>About</h2>
+    <p class="small-dim">Data comes straight from the group's Google Sheet — picks are still entered there every week. This page re-pulls it on a schedule, so it may lag the sheet by a bit.</p>
+    <p class="small-dim" id="freshness" style="margin-top:6px;"></p>
+  </div>
+
+</div>
+
+<script>
+const DATA = __DATA_JSON__;
+
+const RANK_MEDAL = ['gold','silver','bronze'];
+
+function fmtPct(p){ return p==null ? '—' : Math.round(p*100)+'%'; }
+function fmtMoney(v){ return '$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+const seasonKeys = Object.keys(DATA.seasons).sort();
+let currentView = seasonKeys.includes('2026-2027') ? '2026-2027' : (seasonKeys[seasonKeys.length-1] || 'all-time');
+
+function seasonList(){
+  return ['all-time', ...seasonKeys];
+}
+
+function currentPersonStats(){
+  if(currentView === 'all-time') return DATA.all_time.person_stats;
+  const s = DATA.seasons[currentView];
+  return (s && s.detail && s.detail.has_detail) ? s.detail.person_stats : null;
+}
+function currentCategoryStats(){
+  if(currentView === 'all-time') return DATA.all_time.category_stats;
+  const s = DATA.seasons[currentView];
+  return (s && s.detail && s.detail.has_detail) ? s.detail.category_stats : null;
+}
+function currentTotals(){
+  if(currentView === 'all-time') return DATA.all_time.totals;
+  const s = DATA.seasons[currentView];
+  return (s && s.detail && s.detail.has_detail) ? s.detail.totals : null;
+}
+
+function renderTabs(){
+  const el = document.getElementById('seasonTabs');
+  el.innerHTML = '';
+  seasonList().forEach(key=>{
+    const btn = document.createElement('button');
+    btn.className = 'season-tab' + (key===currentView?' active':'');
+    btn.textContent = key === 'all-time' ? 'All-Time' : key;
+    btn.onclick = ()=>{ currentView = key; render(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderKpis(){
+  const el = document.getElementById('kpiRow');
+  const totals = currentTotals();
+  const season = currentView === 'all-time' ? null : DATA.seasons[currentView];
+  const winnings = season ? season.winnings : null;
+
+  const tiles = [];
+  if(totals){
+    tiles.push({val: fmtPct(totals.win_pct), lbl:'Leg Win Rate', sub:`${totals.wins}-${totals.losses} overall`});
+    tiles.push({val:`${totals.full_hit_weeks} / ${totals.graded_weeks}`, lbl:'Full Parlay Hits', sub: totals.graded_weeks ? `${fmtPct(totals.full_hit_weeks/totals.graded_weeks)} of graded weeks` : ''});
+  } else {
+    tiles.push({val:'—', lbl:'Leg Win Rate', sub:'Not graded yet'});
+    tiles.push({val:'—', lbl:'Full Parlay Hits', sub:''});
+  }
+  if(currentView === 'all-time'){
+    tiles.push({val: fmtMoney(DATA.all_time.earnings), lbl:'All-Time Earnings', sub:`across ${seasonKeys.length} seasons`});
+    tiles.push({val: DATA.people.length, lbl:'Bettors', sub: DATA.people.join(', ')});
+  } else {
+    tiles.push({val: winnings ? fmtMoney(winnings.winnings) : '$0.00', lbl:'Season Earnings', sub: winnings ? `${fmtMoney(winnings.total_risk)} risked` : ''});
+    tiles.push({val: winnings && winnings.weeks ? winnings.weeks : '—', lbl:'Weeks', sub: winnings ? `${fmtMoney(winnings.wager_per)}/person/week` : ''});
+  }
+
+  el.innerHTML = tiles.map(t=>`
+    <div class="kpi-tile">
+      <div class="kpi-val">${t.val}</div>
+      <div class="kpi-lbl">${t.lbl}</div>
+      <div class="kpi-sub">${t.sub||''}</div>
+    </div>`).join('');
+}
+
+function isUntrackedSeason(){
+  if(currentView === 'all-time') return false;
+  const s = DATA.seasons[currentView];
+  return !s || !s.detail;
+}
+
+function renderLeaderboard(){
+  const body = document.getElementById('leaderboardBody');
+  const sub = document.getElementById('leaderboardSub');
+  const stats = currentPersonStats();
+  if(!stats){
+    if(isUntrackedSeason()){
+      sub.textContent = `${currentView} predates detailed stat tracking.`;
+      body.innerHTML = '<p class="empty-note">Only season earnings were recorded for this one — no per-leg breakdown exists.</p>';
+    } else {
+      sub.textContent = 'No graded picks for this season yet.';
+      body.innerHTML = '<p class="empty-note">Once legs are graded H/M in the sheet, standings show up here.</p>';
+    }
+    return;
+  }
+  sub.textContent = currentView === 'all-time' ? 'Combined record across every graded season — tap a name for their full category breakdown.' : `Ranked by win rate for ${currentView} — tap a name for their full category breakdown.`;
+  const ranked = DATA.people
+    .map(p=>({person:p, ...stats[p]}))
+    .filter(p=>p.total>0)
+    .sort((a,b)=> (b.win_pct||0)-(a.win_pct||0));
+
+  body.innerHTML = ranked.map((p,i)=>{
+    const medal = RANK_MEDAL[i] ? ` ${RANK_MEDAL[i]}` : '';
+    const detailId = `leader-detail-${p.person}`;
+    const cats = Object.entries(p.categories||{})
+      .map(([cat,rec])=>({cat, ...rec, total:rec.wins+rec.losses, pct: (rec.wins+rec.losses)?rec.wins/(rec.wins+rec.losses):null}))
+      .sort((a,b)=> b.total-a.total || (b.pct||0)-(a.pct||0));
+    const catRows = cats.map(c=>{
+      const pct = Math.round((c.pct||0)*100);
+      const cls = pct>=50 ? 'above' : 'below';
+      return `
+      <div class="cat-row">
+        <div class="cat-label">${c.cat}</div>
+        <div class="cat-track"><div class="cat-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="cat-pct">${pct}%</div>
+        <div class="cat-n">${c.wins}-${c.losses}</div>
+      </div>`;
+    }).join('');
+    return `
+    <div class="leader-row" data-toggle="${detailId}">
+      <div class="rank-badge${medal}">${i+1}</div>
+      <div class="leader-main">
+        <div class="leader-name">${p.person} <span class="expand-caret">▾</span></div>
+        <div class="leader-mpc">${p.mpc ? `Favorite: ${p.mpc} (${p.mpc_count}x, ${fmtPct(p.mpc_pct)})` : 'No repeat category yet'}</div>
+      </div>
+      <div class="leader-record">
+        <div class="leader-pct">${fmtPct(p.win_pct)}</div>
+        <div class="leader-wl">${p.wins}-${p.losses}</div>
+        <div class="leader-bar-wrap"><div class="leader-bar" style="width:${Math.round((p.win_pct||0)*100)}%"></div></div>
+      </div>
+    </div>
+    <div class="leader-detail" id="${detailId}" hidden>
+      <p class="card-sub" style="margin-top:0;">${p.person}'s full category record</p>
+      ${catRows || '<p class="empty-note">No categorized picks.</p>'}
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('.leader-row').forEach(row=>{
+    row.onclick = ()=>{
+      const detail = document.getElementById(row.dataset.toggle);
+      detail.hidden = !detail.hidden;
+      row.classList.toggle('expanded', !detail.hidden);
+    };
+  });
+}
+
+function renderCategories(){
+  const body = document.getElementById('categoryBody');
+  const stats = currentCategoryStats();
+  if(!stats || !Object.keys(stats).length){
+    body.innerHTML = isUntrackedSeason()
+      ? '<p class="empty-note">No category breakdown exists for this season.</p>'
+      : '<p class="empty-note">No graded picks for this season yet.</p>';
+    return;
+  }
+  const rows = Object.entries(stats)
+    .filter(([,r])=>r.total>0)
+    .sort((a,b)=> (b[1].win_pct||0)-(a[1].win_pct||0));
+  body.innerHTML = rows.map(([cat,r])=>{
+    const pct = Math.round((r.win_pct||0)*100);
+    const cls = pct>=50 ? 'above' : 'below';
+    return `
+    <div class="cat-row">
+      <div class="cat-label">${cat}</div>
+      <div class="cat-track"><div class="cat-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="cat-pct">${pct}%</div>
+      <div class="cat-n">${r.wins}-${r.losses}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderWeekly(){
+  const body = document.getElementById('weeklyBody');
+  const sub = document.getElementById('weeklySub');
+  if(currentView === 'all-time'){
+    sub.textContent = 'Pick a season above to see individual weeks.';
+    body.innerHTML = '';
+    return;
+  }
+  const season = DATA.seasons[currentView];
+  if(!season || !season.detail){
+    sub.textContent = isUntrackedSeason() ? `${currentView} predates per-week tracking.` : `No pick data logged for ${currentView} yet.`;
+    body.innerHTML = '';
+    return;
+  }
+  const detail = season.detail;
+  const hasGrading = detail.has_detail;
+  sub.textContent = hasGrading ? `Every leg, every week of ${currentView}.` : `Picks logged so far for ${currentView} — not graded yet.`;
+
+  const weeks = detail.weekly.filter(w=>w.picks.length>0).sort((a,b)=>b.week-a.week);
+  body.innerHTML = weeks.map(wk=>{
+    const banner = hasGrading && wk.all_hit ? '<div class="full-hit-banner">🎉 Full parlay hit this week — everyone cashed</div>' : '';
+    const picks = wk.picks.map(p=>{
+      if(hasGrading){
+        const won = p.result === 'H';
+        return `
+          <div class="pick-line">
+            <div class="result-dot ${won?'win':'loss'}">${won?'✓':'✕'}</div>
+            <div class="pick-person">${p.person}</div>
+            <div class="pick-play">${p.play || '<span class=\"small-dim\">(no pick logged)</span>'}</div>
+            <div class="pick-cat">${p.category||''}</div>
+          </div>`;
+      }
+      return `
+        <div class="pick-line">
+          <div class="result-dot pending">•</div>
+          <div class="pick-person">${p.person}</div>
+          <div class="pick-play">${p.play}</div>
+        </div>`;
+    }).join('');
+    return `
+    <div class="week-block">
+      <div class="week-head">
+        <div class="week-title">Week ${wk.week}</div>
+        <div class="week-pays">${wk.who_pays ? `${wk.who_pays} pays this week` : ''}</div>
+      </div>
+      ${banner}
+      ${picks || '<p class="empty-note">No picks logged.</p>'}
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  document.getElementById('heroEarnings').textContent = fmtMoney(DATA.all_time.earnings);
+  document.getElementById('freshness').textContent = `Last synced from the sheet: ${DATA.generated}.`;
+  renderTabs();
+  renderKpis();
+  renderLeaderboard();
+  renderCategories();
+  renderWeekly();
+}
+
+render();
+</script>
+</body>
+</html>
