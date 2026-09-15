@@ -262,6 +262,14 @@ def aggregate_all_time(seasons_data):
     for season in seasons_data.values():
         detail = season.get("detail")
         if not detail or not detail.get("has_detail"):
+            # No per-leg breakdown for this season (e.g. 2024-2025, which predates
+            # detailed tracking) — but the Dashboard tab still knows whether the
+            # full parlay hit that season, so fold that into the all-time count
+            # even though we can't attribute it to individual people/categories.
+            winnings = season.get("winnings")
+            if winnings and winnings.get("full_hits") is not None and winnings.get("weeks"):
+                full_hit_weeks += winnings["full_hits"]
+                graded_weeks += winnings["weeks"]
             continue
         for person, stats in detail["person_stats"].items():
             ps = person_stats.setdefault(person, {"wins": 0, "losses": 0, "categories": {}})
