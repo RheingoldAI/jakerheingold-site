@@ -281,7 +281,7 @@ function fmtPct(p){ return p==null ? '—' : Math.round(p*100)+'%'; }
 function fmtMoney(v){ return '$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
 const seasonKeys = Object.keys(DATA.seasons).sort();
-let currentView = seasonKeys.includes('2026-2027') ? '2026-2027' : (seasonKeys[seasonKeys.length-1] || 'all-time');
+let currentView = 'all-time';
 
 function seasonList(){
   return ['all-time', ...seasonKeys];
