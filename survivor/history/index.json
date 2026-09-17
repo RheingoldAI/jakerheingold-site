@@ -6,5 +6,13 @@
     "run_label": "manual",
     "week": 1,
     "file": "history/2026-w01-manual-20260914.json"
+  },
+  {
+    "id": "2026-w02-thu-20260917",
+    "date": "2026-09-17",
+    "generated_at": "2026-09-17T16:13:24.706596+00:00",
+    "run_label": "thu",
+    "week": 2,
+    "file": "history/2026-w02-thu-20260917.json"
   }
 ]
