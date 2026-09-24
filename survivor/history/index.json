@@ -22,5 +22,13 @@
     "run_label": "sat",
     "week": 2,
     "file": "history/2026-w02-sat-20260919.json"
+  },
+  {
+    "id": "2026-w03-thu-20260924",
+    "date": "2026-09-24",
+    "generated_at": "2026-09-24T16:29:35.531279+00:00",
+    "run_label": "thu",
+    "week": 3,
+    "file": "history/2026-w03-thu-20260924.json"
   }
 ]
