@@ -5,7 +5,7 @@
     {
       "company": "Solid",
       "website": "https://solid.tech/",
-      "logo": "assets/solid.svg",
+      "logo": "/angel/assets/solid.svg",
       "blurb": "Gives AI agents their own computer, accounts, and budget to carry out business tasks end-to-end — setting up tools, doing the work, checking results, and reporting back.",
       "date": null,
       "status": "active",
@@ -17,7 +17,7 @@
     {
       "company": "Aformic",
       "website": "https://aformic.com/",
-      "logo": "assets/aformic.png",
+      "logo": "/angel/assets/aformic.png",
       "blurb": "Builds autonomous mobile robots (the F Series) and the QURSOR fleet-management platform for automated material handling in factories and distribution centers. Part of the AIUT Group.",
       "date": null,
       "status": "active",
@@ -29,7 +29,7 @@
     {
       "company": "Perpetual",
       "website": "https://www.theperpetualpet.com/",
-      "logo": "assets/perpetual.svg",
+      "logo": "/angel/assets/perpetual.svg",
       "blurb": "A pet health membership that runs at-home fur tests for dogs three times a year, turning mineral and toxin markers into health scores and vet-aligned care plans.",
       "date": null,
       "status": "active",
@@ -41,7 +41,7 @@
     {
       "company": "MedCu",
       "website": "https://medcu.com/us/",
-      "logo": "assets/medcu.jpg",
+      "logo": "/angel/assets/medcu.jpg",
       "blurb": "Makes copper-oxide-embedded wound dressings for acute, chronic, and burn wounds, including diabetic and pressure ulcers. Holds FDA 510(k) and CE clearance.",
       "date": null,
       "status": "active",
