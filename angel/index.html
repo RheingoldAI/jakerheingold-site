@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angel Tab</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030712;
+  --card:rgba(23,23,23,0.6);
+  --card-solid:#111827;
+  --border:rgba(31,41,55,0.7);
+  --text:#F3F4F6;
+  --text-dim:#9CA3AF;
+  --text-dimmer:#6B7280;
+  --accent:#0EA5E9;
+  --accent-bright:#38BDF8;
+  --accent-hover:#0284C7;
+  --good:#22C55E;
+  --bad:#EF4444;
+  --gold:#EAB308;
+  --silver:#94A3B8;
+  --bronze:#D97706;
+}
+*{box-sizing:border-box;}
+html{font-family:'Roboto',system-ui,sans-serif;}
+h1,h2,h3,h4,h5,h6{font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Roboto',system-ui,sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:#0ea5e920;}
+a{color:var(--accent);text-decoration:none;text-underline-offset:3px;}
+a:hover{text-decoration:underline;}
+
+.topnav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(3,7,18,0.8);
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid rgba(31,41,55,0.5);
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.topnav .brand{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:-0.01em;
+  color:var(--text);
+}
+.topnav .brand:hover{color:var(--accent);text-decoration:none;}
+.topnav .back{font-size:13px;color:var(--text-dim);}
+.topnav .back:hover{color:var(--accent-bright);}
+
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;}
+
+.scoreboard{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.title-block h1{
+  font-weight:600;
+  font-size:26px;
+  letter-spacing:-0.01em;
+  margin:0 0 4px 0;
+}
+.title-block p{margin:0;color:var(--text-dim);font-size:13px;}
+.hero-stat{
+  background:var(--card-solid);
+  border:1px solid rgba(14,165,233,0.4);
+  border-radius:10px;
+  padding:10px 20px;
+  text-align:center;
+  min-width:140px;
+}
+.hero-stat .num{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:26px;
+  font-weight:600;
+  color:var(--accent-bright);
+  line-height:1.15;
+}
+.hero-stat .lbl{font-size:11px;color:var(--text-dim);margin-top:2px;letter-spacing:0.3px;text-transform:uppercase;}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;}
+@media(max-width:640px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+.kpi-tile{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+.kpi-tile .kpi-val{font-family:'IBM Plex Sans',sans-serif;font-size:24px;font-weight:600;color:var(--text);}
+.kpi-tile .kpi-lbl{font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.kpi-tile .kpi-sub{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  margin-top:16px;
+}
+.card h2{font-size:16px;font-weight:600;margin:0 0 4px 0;letter-spacing:-0.01em;}
+.card .card-sub{font-size:12px;color:var(--text-dim);margin:0 0 14px 0;}
+.small-dim{color:var(--text-dim);font-size:12px;}
+.empty-note{color:var(--text-dimmer);font-size:13px;padding:10px 0;}
+
+/* By-person leaderboard (reuses parlay's leader-row pattern) */
+.leader-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 4px;
+  border-bottom:1px solid rgba(31,41,55,0.5);
+}
+.leader-row:last-child{border-bottom:none;}
+.rank-badge{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:13px;
+  background:var(--card-solid);color:var(--text-dim);border:1px solid var(--border);
+  flex-shrink:0;
+}
+.rank-badge.gold{background:rgba(234,179,8,0.15);color:var(--gold);border-color:rgba(234,179,8,0.4);}
+.rank-badge.silver{background:rgba(148,163,184,0.15);color:var(--silver);border-color:rgba(148,163,184,0.4);}
+.rank-badge.bronze{background:rgba(217,119,6,0.15);color:var(--bronze);border-color:rgba(217,119,6,0.4);}
+.leader-main{flex:1;min-width:0;}
+.leader-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;color:var(--text);}
+.leader-mpc{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
+.leader-record{text-align:right;flex-shrink:0;}
+.leader-pct{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:16px;color:var(--accent-bright);}
+.leader-wl{font-size:11px;color:var(--text-dim);}
+.leader-bar-wrap{width:90px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;}
+.leader-bar{height:100%;background:var(--accent);}
+
+/* Deal cards */
+.deal-block{border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--card-solid);}
+.deal-block:last-child{margin-bottom:0;}
+.deal-head{display:flex;align-items:flex-start;gap:12px;}
+.deal-logo{
+  width:44px;height:44px;border-radius:9px;background:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;
+  border:1px solid var(--border);
+}
+.deal-logo img{width:100%;height:100%;object-fit:contain;padding:6px;}
+.deal-meta{flex:1;min-width:0;}
+.deal-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.deal-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:15px;color:var(--text);}
+.deal-name a{color:var(--text);}
+.deal-name a:hover{color:var(--accent-bright);}
+.deal-blurb{font-size:12.5px;color:var(--text-dim);margin-top:4px;line-height:1.5;}
+.chip{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:10.5px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text-dim);
+  flex-shrink:0;white-space:nowrap;
+}
+.chip.active{background:rgba(34,197,94,0.12);color:var(--good);border-color:rgba(34,197,94,0.35);}
+.chip.exited{background:rgba(148,163,184,0.12);color:var(--silver);border-color:rgba(148,163,184,0.35);}
+
+.deal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+@media(max-width:560px){.deal-stats{grid-template-columns:repeat(2,1fr);}}
+.deal-stat .ds-val{font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;color:var(--text);}
+.deal-stat .ds-lbl{font-size:10.5px;color:var(--text-dimmer);margin-top:2px;text-transform:uppercase;letter-spacing:0.3px;}
+
+.check-rows{margin-top:14px;border-top:1px dashed rgba(31,41,55,0.6);padding-top:10px;}
+.check-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:13px;}
+.check-person{color:var(--text);font-weight:500;}
+.check-person .front-tag{color:var(--text-dimmer);font-size:11px;font-weight:400;margin-left:6px;}
+.check-amt{font-family:'IBM Plex Sans',sans-serif;font-weight:600;color:var(--text-dim);}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <a class="brand" href="https://jakerheingold.ai">Jake Rheingold</a>
+  <a class="back" href="https://jakerheingold.ai">&larr; Back to jakerheingold.ai</a>
+</div>
+
+<div class="wrap">
+
+  <div class="scoreboard">
+    <div class="title-block">
+      <h1>Angel Tab</h1>
+      <p>Jake, Dalton, Michael &amp; Chad — small checks, covering each other</p>
+    </div>
+    <div class="hero-stat">
+      <div class="num" id="heroDeployed">$0</div>
+      <div class="lbl">Total Deployed</div>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card">
+    <h2>By Person</h2>
+    <p class="card-sub">Total invested across every deal. Everyone's squared up — this just tracks who put in what.</p>
+    <div id="personBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>Deals</h2>
+    <p class="card-sub" id="dealsSub">Every check, every company.</p>
+    <div id="dealsBody"></div>
+  </div>
+
+  <div class="card">
+    <h2>About</h2>
+    <p class="small-dim">This is a hand-maintained ledger, not a live feed — there's no sheet or API behind it. When a new check goes out or a valuation updates, the data file gets edited directly and the page rebuilds.</p>
+    <p class="small-dim" id="freshness" style="margin-top:6px;"></p>
+  </div>
+
+</div>
+
+<script>
+const DATA = {"generated": "2026-10-26", "people": ["Jake", "Dalton", "Michael", "Chad"], "deals": [{"company": "Solid", "website": "https://solid.tech/", "logo": "assets/solid.svg", "blurb": "Gives AI agents their own computer, accounts, and budget to carry out business tasks end-to-end \u2014 setting up tools, doing the work, checking results, and reporting back.", "date": null, "status": "active", "entry_valuation": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 2500, "Dalton": 2500}}, {"company": "Aformic", "website": "https://aformic.com/", "logo": "assets/aformic.png", "blurb": "Builds autonomous mobile robots (the F Series) and the QURSOR fleet-management platform for automated material handling in factories and distribution centers. Part of the AIUT Group.", "date": null, "status": "active", "entry_valuation": null, "current_valuation": null, "fronted_by": "Jake", "checks": {"Jake": 2500, "Dalton": 2500}}, {"company": "Perpetual", "website": "https://www.theperpetualpet.com/", "logo": "assets/perpetual.svg", "blurb": "A pet health membership that runs at-home fur tests for dogs three times a year, turning mineral and toxin markers into health scores and vet-aligned care plans.", "date": null, "status": "active", "entry_valuation": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 5000, "Dalton": 5000, "Michael": 1000, "Chad": 500}}, {"company": "MedCu", "website": "https://medcu.com/us/", "logo": "assets/medcu.jpg", "blurb": "Makes copper-oxide-embedded wound dressings for acute, chronic, and burn wounds, including diabetic and pressure ulcers. Holds FDA 510(k) and CE clearance.", "date": null, "status": "active", "entry_valuation": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 2500, "Dalton": 5000, "Michael": 2500}}]};
+
+function fmtMoney(v){
+  if(v == null) return '—';
+  return '$'+Number(v).toLocaleString('en-US',{maximumFractionDigits:0});
+}
+
+function personTotals(){
+  const totals = {};
+  DATA.people.forEach(p => totals[p] = 0);
+  DATA.deals.forEach(deal => {
+    Object.entries(deal.checks).forEach(([person, amt]) => {
+      totals[person] = (totals[person]||0) + amt;
+    });
+  });
+  return totals;
+}
+
+function totalDeployed(){
+  return DATA.deals.reduce((sum, deal) => sum + Object.values(deal.checks).reduce((a,b)=>a+b,0), 0);
+}
+
+function renderKpis(){
+  const el = document.getElementById('kpiRow');
+  const activeCount = DATA.deals.filter(d => d.status === 'active').length;
+  const tiles = [
+    {val: DATA.deals.length, lbl:'Deals', sub: `${activeCount} active`},
+    {val: DATA.people.length, lbl:'People', sub: DATA.people.join(', ')},
+    {val: fmtMoney(totalDeployed()), lbl:'Total Deployed', sub:'across all deals'},
+    {val:'Squared up', lbl:'Balance', sub:'no outstanding IOUs'},
+  ];
+  el.innerHTML = tiles.map(t=>`
+    <div class="kpi-tile">
+      <div class="kpi-val">${t.val}</div>
+      <div class="kpi-lbl">${t.lbl}</div>
+      <div class="kpi-sub">${t.sub||''}</div>
+    </div>`).join('');
+}
+
+function renderPersonBody(){
+  const body = document.getElementById('personBody');
+  const totals = personTotals();
+  const max = Math.max(1, ...Object.values(totals));
+  const ranked = DATA.people
+    .map(p => ({person:p, total: totals[p]||0}))
+    .sort((a,b) => b.total - a.total);
+  const medals = ['gold','silver','bronze'];
+
+  body.innerHTML = ranked.map((p,i)=>{
+    const medal = medals[i] ? ` ${medals[i]}` : '';
+    const dealsIn = DATA.deals.filter(d => (d.checks[p.person]||0) > 0).length;
+    return `
+    <div class="leader-row">
+      <div class="rank-badge${medal}">${i+1}</div>
+      <div class="leader-main">
+        <div class="leader-name">${p.person}</div>
+        <div class="leader-mpc">${dealsIn} deal${dealsIn===1?'':'s'}</div>
+      </div>
+      <div class="leader-record">
+        <div class="leader-pct">${fmtMoney(p.total)}</div>
+        <div class="leader-bar-wrap"><div class="leader-bar" style="width:${Math.round((p.total/max)*100)}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDeals(){
+  const body = document.getElementById('dealsBody');
+  body.innerHTML = DATA.deals.map(deal => {
+    const total = Object.values(deal.checks).reduce((a,b)=>a+b,0);
+    const checkRows = DATA.people
+      .filter(p => deal.checks[p] != null)
+      .map(p => {
+        const frontTag = deal.fronted_by === p ? '<span class="front-tag">wrote the check</span>' : '';
+        return `
+        <div class="check-row">
+          <span class="check-person">${p}${frontTag}</span>
+          <span class="check-amt">${fmtMoney(deal.checks[p])}</span>
+        </div>`;
+      }).join('');
+
+    const statusChip = `<span class="chip ${deal.status}">${deal.status}</span>`;
+    const logoImg = deal.logo ? `<img src="${deal.logo}" alt="${deal.company} logo">` : '';
+
+    return `
+    <div class="deal-block">
+      <div class="deal-head">
+        <div class="deal-logo">${logoImg}</div>
+        <div class="deal-meta">
+          <div class="deal-name-row">
+            <span class="deal-name"><a href="${deal.website}" target="_blank" rel="noopener noreferrer">${deal.company}</a></span>
+            ${statusChip}
+          </div>
+          <div class="deal-blurb">${deal.blurb||''}</div>
+        </div>
+      </div>
+      <div class="deal-stats">
+        <div class="deal-stat">
+          <div class="ds-val">${fmtMoney(total)}</div>
+          <div class="ds-lbl">Total Check</div>
+        </div>
+        <div class="deal-stat">
+          <div class="ds-val">${deal.entry_valuation ? fmtMoney(deal.entry_valuation) : 'TBD'}</div>
+          <div class="ds-lbl">Entry Valuation</div>
+        </div>
+        <div class="deal-stat">
+          <div class="ds-val">${deal.current_valuation ? fmtMoney(deal.current_valuation) : '—'}</div>
+          <div class="ds-lbl">Current Valuation</div>
+        </div>
+      </div>
+      <div class="check-rows">${checkRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function render(){
+  document.getElementById('heroDeployed').textContent = fmtMoney(totalDeployed());
+  document.getElementById('freshness').textContent = `Last updated: ${DATA.generated}.`;
+  renderKpis();
+  renderPersonBody();
+  renderDeals();
+}
+
+render();
+</script>
+</body>
+</html>

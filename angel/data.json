@@ -1,0 +1,54 @@
+{
+  "generated": "2026-10-26",
+  "people": ["Jake", "Dalton", "Michael", "Chad"],
+  "deals": [
+    {
+      "company": "Solid",
+      "website": "https://solid.tech/",
+      "logo": "assets/solid.svg",
+      "blurb": "Gives AI agents their own computer, accounts, and budget to carry out business tasks end-to-end — setting up tools, doing the work, checking results, and reporting back.",
+      "date": null,
+      "status": "active",
+      "entry_valuation": null,
+      "current_valuation": null,
+      "fronted_by": "Dalton",
+      "checks": { "Jake": 2500, "Dalton": 2500 }
+    },
+    {
+      "company": "Aformic",
+      "website": "https://aformic.com/",
+      "logo": "assets/aformic.png",
+      "blurb": "Builds autonomous mobile robots (the F Series) and the QURSOR fleet-management platform for automated material handling in factories and distribution centers. Part of the AIUT Group.",
+      "date": null,
+      "status": "active",
+      "entry_valuation": null,
+      "current_valuation": null,
+      "fronted_by": "Jake",
+      "checks": { "Jake": 2500, "Dalton": 2500 }
+    },
+    {
+      "company": "Perpetual",
+      "website": "https://www.theperpetualpet.com/",
+      "logo": "assets/perpetual.svg",
+      "blurb": "A pet health membership that runs at-home fur tests for dogs three times a year, turning mineral and toxin markers into health scores and vet-aligned care plans.",
+      "date": null,
+      "status": "active",
+      "entry_valuation": null,
+      "current_valuation": null,
+      "fronted_by": "Dalton",
+      "checks": { "Jake": 5000, "Dalton": 5000, "Michael": 1000, "Chad": 500 }
+    },
+    {
+      "company": "MedCu",
+      "website": "https://medcu.com/us/",
+      "logo": "assets/medcu.jpg",
+      "blurb": "Makes copper-oxide-embedded wound dressings for acute, chronic, and burn wounds, including diabetic and pressure ulcers. Holds FDA 510(k) and CE clearance.",
+      "date": null,
+      "status": "active",
+      "entry_valuation": null,
+      "current_valuation": null,
+      "fronted_by": "Dalton",
+      "checks": { "Jake": 2500, "Dalton": 5000, "Michael": 2500 }
+    }
+  ]
+}
