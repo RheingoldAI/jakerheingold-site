@@ -148,6 +148,10 @@ a:hover{text-decoration:underline;}
 .leader-wl{font-size:11px;color:var(--text-dim);}
 .leader-bar-wrap{width:90px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;}
 .leader-bar{height:100%;background:var(--accent);}
+.leader-growth{font-size:11px;font-weight:600;margin-top:3px;}
+.leader-growth.positive{color:var(--good);}
+.leader-growth.negative{color:var(--bad);}
+.leader-growth.flat{color:var(--text-dimmer);font-weight:400;}
 
 /* Deal cards */
 .deal-block{border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--card-solid);}
@@ -220,7 +224,7 @@ a:hover{text-decoration:underline;}
 
   <div class="card">
     <h2>By Person</h2>
-    <p class="card-sub">Total invested across every round. Everyone's squared up — this just tracks who put in what.</p>
+    <p class="card-sub">Total invested across every round. Everyone's squared up — this just tracks who put in what. Growth is an unrealized paper mark where we've recorded a markup, not a cashed-out gain.</p>
     <div id="personBody"></div>
   </div>
 
@@ -268,6 +272,27 @@ function totalDeployed(){
   return allRounds().reduce((sum, {round}) => sum + Object.values(round.checks).reduce((a,b)=>a+b,0), 0);
 }
 
+// A round's markup multiple: only meaningful once both an entry and a current
+// valuation are recorded. Until then, treat it as flat (no paper gain tracked).
+function roundMultiple(round){
+  if(round.entry_valuation && round.current_valuation){
+    return round.current_valuation / round.entry_valuation;
+  }
+  return 1;
+}
+
+function personGrowth(){
+  const growth = {};
+  DATA.people.forEach(p => growth[p] = 0);
+  allRounds().forEach(({round}) => {
+    const multiple = roundMultiple(round);
+    Object.entries(round.checks).forEach(([person, amt]) => {
+      growth[person] = (growth[person]||0) + amt * (multiple - 1);
+    });
+  });
+  return growth;
+}
+
 function renderKpis(){
   const el = document.getElementById('kpiRow');
   const rounds = allRounds();
@@ -289,10 +314,11 @@ function renderKpis(){
 function renderPersonBody(){
   const body = document.getElementById('personBody');
   const totals = personTotals();
+  const growth = personGrowth();
   const max = Math.max(1, ...Object.values(totals));
   const rounds = allRounds();
   const ranked = DATA.people
-    .map(p => ({person:p, total: totals[p]||0}))
+    .map(p => ({person:p, total: totals[p]||0, growth: growth[p]||0}))
     .sort((a,b) => b.total - a.total);
   const medals = ['gold','silver','bronze'];
 
@@ -300,6 +326,11 @@ function renderPersonBody(){
     const medal = medals[i] ? ` ${medals[i]}` : '';
     const roundsIn = rounds.filter(({round}) => (round.checks[p.person]||0) > 0).length;
     const companiesIn = new Set(rounds.filter(({round}) => (round.checks[p.person]||0) > 0).map(r => r.company.company)).size;
+
+    let growthCls = 'flat', growthLbl = 'No markups yet';
+    if(p.growth > 0){ growthCls = 'positive'; growthLbl = `+${fmtMoney(p.growth)} unrealized`; }
+    else if(p.growth < 0){ growthCls = 'negative'; growthLbl = `-${fmtMoney(Math.abs(p.growth))} unrealized`; }
+
     return `
     <div class="leader-row">
       <div class="rank-badge${medal}">${i+1}</div>
@@ -309,6 +340,7 @@ function renderPersonBody(){
       </div>
       <div class="leader-record">
         <div class="leader-pct">${fmtMoney(p.total)}</div>
+        <div class="leader-growth ${growthCls}">${growthLbl}</div>
         <div class="leader-bar-wrap"><div class="leader-bar" style="width:${Math.round((p.total/max)*100)}%"></div></div>
       </div>
     </div>`;
@@ -336,6 +368,7 @@ function renderDeals(){
       const statusChip = `<span class="chip ${round.status}">${round.status}</span>`;
       const dateLbl = round.date ? `<span class="round-date">${round.date}</span>` : '';
       const note = round.valuation_note ? `<div class="ds-note">${round.valuation_note}</div>` : '';
+      const currentNote = round.current_valuation_note ? `<div class="ds-note">${round.current_valuation_note}</div>` : '';
 
       return `
       <div class="round-block">
@@ -356,6 +389,7 @@ function renderDeals(){
           <div class="deal-stat">
             <div class="ds-val">${round.current_valuation ? fmtMoney(round.current_valuation) : '—'}</div>
             <div class="ds-lbl">Current Valuation</div>
+            ${currentNote}
           </div>
         </div>
         <div class="check-rows">${checkRows}</div>
