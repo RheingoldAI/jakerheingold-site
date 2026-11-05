@@ -147,19 +147,21 @@ a:hover{text-decoration:underline;}
 .leader-bar-wrap{width:90px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;margin-left:auto;}
 .leader-bar{height:100%;background:var(--accent);}
 
-/* Two stat columns to the right: Invested, Current Value (+ unrealized growth) */
-.leader-stats{display:flex;align-items:flex-start;gap:22px;flex-shrink:0;}
+/* Two stat columns to the right: Invested, Current Value (+ unrealized growth).
+   Fixed-width grid tracks so the two columns line up across every row. */
+.leader-stats{display:grid;grid-template-columns:90px 168px;gap:20px;flex-shrink:0;}
 .leader-stat{text-align:right;}
 .leader-stat-val{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:15px;color:var(--text);}
 .leader-stat-val.highlight{color:var(--accent-bright);font-size:16px;}
 .leader-stat-lbl{font-size:9.5px;color:var(--text-dimmer);margin-top:2px;text-transform:uppercase;letter-spacing:0.3px;}
-.leader-growth{font-size:11px;font-weight:600;margin-top:3px;}
+.leader-growth{font-size:11px;font-weight:600;margin-top:3px;white-space:nowrap;}
 .leader-growth.positive{color:var(--good);}
 .leader-growth.negative{color:var(--bad);}
 .leader-growth.flat{color:var(--text-dimmer);font-weight:400;}
-@media(max-width:520px){
+@media(max-width:560px){
   .leader-row{flex-wrap:wrap;}
-  .leader-stats{width:100%;margin-top:10px;justify-content:space-between;padding-left:40px;}
+  .leader-stats{grid-template-columns:1fr 1fr;width:100%;margin-top:10px;padding-left:40px;gap:12px;}
+  .leader-growth{white-space:normal;}
 }
 
 /* Deal cards */
