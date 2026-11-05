@@ -188,7 +188,8 @@ a:hover{text-decoration:underline;}
 .chip.active{background:rgba(34,197,94,0.12);color:var(--good);border-color:rgba(34,197,94,0.35);}
 .chip.exited{background:rgba(148,163,184,0.12);color:var(--silver);border-color:rgba(148,163,184,0.35);}
 
-.deal-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-top:14px;}
+.deal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+@media(max-width:560px){.deal-stats{grid-template-columns:repeat(2,1fr);}}
 .deal-stat .ds-val{font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;color:var(--text);}
 .deal-stat .ds-val.positive{color:var(--good);}
 .deal-stat .ds-val.negative{color:var(--bad);}
@@ -211,6 +212,8 @@ a:hover{text-decoration:underline;}
 .round-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;color:var(--text);}
 .round-date{font-size:11px;color:var(--text-dimmer);margin-left:6px;font-weight:400;}
 .ds-note{font-size:10px;color:var(--text-dimmer);margin-top:1px;}
+.ds-note.positive{color:var(--good);font-weight:600;}
+.ds-note.negative{color:var(--bad);font-weight:600;}
 
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 </style>
@@ -258,7 +261,7 @@ a:hover{text-decoration:underline;}
 </div>
 
 <script>
-const DATA = {"generated": "2026-11-04", "people": ["Jake", "Dalton", "Michael", "Chad"], "companies": [{"company": "Solid", "website": "https://solid.tech/", "logo": "/angel/assets/solid.svg", "blurb": "Gives AI agents their own computer, accounts, and budget to carry out business tasks end-to-end \u2014 setting up tools, doing the work, checking results, and reporting back.", "rounds": [{"round": "Seed", "date": null, "status": "active", "entry_valuation": 25000000, "valuation_note": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 2500, "Dalton": 2500}}]}, {"company": "Aformic", "website": "https://aformic.com/", "logo": "/angel/assets/aformic.png", "blurb": "Builds autonomous mobile robots (the F Series) and the QURSOR fleet-management platform for automated material handling in factories and distribution centers. Part of the AIUT Group.", "rounds": [{"round": "Seed", "date": "2026-04", "status": "active", "entry_valuation": 40000000, "valuation_note": "post-money cap", "current_valuation": 80000000, "current_valuation_note": "Unrealized paper mark \u2014 the Bridge priced the company at $80M, 2x the Seed cap. Nothing has been sold.", "fronted_by": "Jake", "checks": {"Jake": 2500, "Dalton": 2500}}, {"round": "Bridge", "date": "2026-11", "status": "active", "entry_valuation": 80000000, "valuation_note": "post-money", "current_valuation": null, "fronted_by": "Jake", "checks": {"Jake": 2500, "Dalton": 10000, "Michael": 3000}}]}, {"company": "Perpetual", "website": "https://www.theperpetualpet.com/", "logo": "/angel/assets/perpetual.svg", "blurb": "A pet health membership that runs at-home fur tests for dogs three times a year, turning mineral and toxin markers into health scores and vet-aligned care plans.", "rounds": [{"round": "Pre-Seed", "date": "2026-08", "status": "active", "entry_valuation": 5000000, "valuation_note": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 5000, "Dalton": 5000, "Michael": 3000, "Chad": 500}}]}, {"company": "MedCu", "website": "https://medcu.com/us/", "logo": "/angel/assets/medcu.jpg", "blurb": "Makes copper-oxide-embedded wound dressings for acute, chronic, and burn wounds, including diabetic and pressure ulcers. Holds FDA 510(k) and CE clearance.", "rounds": [{"round": "Seed", "date": "2026-10", "status": "active", "entry_valuation": 12000000, "valuation_note": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 2500, "Dalton": 5000, "Michael": 2500}}]}]};
+const DATA = {"generated": "2026-11-05", "people": ["Jake", "Dalton", "Michael", "Chad"], "companies": [{"company": "Solid", "website": "https://solid.tech/", "logo": "/angel/assets/solid.svg", "blurb": "Gives AI agents their own computer, accounts, and budget to carry out business tasks end-to-end \u2014 setting up tools, doing the work, checking results, and reporting back.", "rounds": [{"round": "Seed", "date": null, "status": "active", "entry_valuation": 25000000, "valuation_note": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 2500, "Dalton": 2500}}]}, {"company": "Aformic", "website": "https://aformic.com/", "logo": "/angel/assets/aformic.png", "blurb": "Builds autonomous mobile robots (the F Series) and the QURSOR fleet-management platform for automated material handling in factories and distribution centers. Part of the AIUT Group.", "rounds": [{"round": "Seed", "date": "2026-04", "status": "active", "entry_valuation": 40000000, "valuation_note": "post-money cap", "current_valuation": 80000000, "current_valuation_note": "Unrealized paper mark", "fronted_by": "Jake", "checks": {"Jake": 2500, "Dalton": 2500}}, {"round": "Bridge", "date": "2026-11", "status": "active", "entry_valuation": 80000000, "valuation_note": "post-money", "current_valuation": null, "fronted_by": "Jake", "checks": {"Jake": 2500, "Dalton": 10000, "Michael": 3000}}]}, {"company": "Perpetual", "website": "https://www.theperpetualpet.com/", "logo": "/angel/assets/perpetual.svg", "blurb": "A pet health membership that runs at-home fur tests for dogs three times a year, turning mineral and toxin markers into health scores and vet-aligned care plans.", "rounds": [{"round": "Pre-Seed", "date": "2026-08", "status": "active", "entry_valuation": 5000000, "valuation_note": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 5000, "Dalton": 5000, "Michael": 3000, "Chad": 500}}]}, {"company": "MedCu", "website": "https://medcu.com/us/", "logo": "/angel/assets/medcu.jpg", "blurb": "Makes copper-oxide-embedded wound dressings for acute, chronic, and burn wounds, including diabetic and pressure ulcers. Holds FDA 510(k) and CE clearance.", "rounds": [{"round": "Seed", "date": "2026-10", "status": "active", "entry_valuation": 12000000, "valuation_note": null, "current_valuation": null, "fronted_by": "Dalton", "checks": {"Jake": 2500, "Dalton": 5000, "Michael": 2500}}]}]};
 
 function fmtMoney(v){
   if(v == null) return '—';
@@ -405,15 +408,11 @@ function renderDeals(){
       const statusChip = `<span class="chip ${round.status}">${round.status}</span>`;
       const dateLbl = round.date ? `<span class="round-date">${round.date}</span>` : '';
       const note = round.valuation_note ? `<div class="ds-note">${round.valuation_note}</div>` : '';
-      const currentNote = round.current_valuation_note ? `<div class="ds-note">${round.current_valuation_note}</div>` : '';
       const hasMarkup = round.entry_valuation && round.current_valuation;
       const returnPct = hasMarkup ? (multiple-1)*100 : null;
-      const returnTile = hasMarkup ? `
-          <div class="deal-stat">
-            <div class="ds-val ${returnPct>=0?'positive':'negative'}">${returnPct>=0?'+':''}${fmtPct(returnPct)}</div>
-            <div class="ds-lbl">Return</div>
-            <div class="ds-note">unrealized</div>
-          </div>` : '';
+      const currentNote = hasMarkup
+        ? `<div class="ds-note ${returnPct>=0?'positive':'negative'}">${returnPct>=0?'+':''}${fmtPct(returnPct)}${round.current_valuation_note ? ` · ${round.current_valuation_note}` : ''}</div>`
+        : (round.current_valuation_note ? `<div class="ds-note">${round.current_valuation_note}</div>` : '');
 
       return `
       <div class="round-block">
@@ -436,7 +435,6 @@ function renderDeals(){
             <div class="ds-lbl">Current Valuation</div>
             ${currentNote}
           </div>
-          ${returnTile}
         </div>
         <div class="check-rows">${checkRows}</div>
       </div>`;

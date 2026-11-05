@@ -33,7 +33,7 @@
           "entry_valuation": 40000000,
           "valuation_note": "post-money cap",
           "current_valuation": 80000000,
-          "current_valuation_note": "Unrealized paper mark — the Bridge priced the company at $80M, 2x the Seed cap. Nothing has been sold.",
+          "current_valuation_note": "Unrealized paper mark",
           "fronted_by": "Jake",
           "checks": { "Jake": 2500, "Dalton": 2500 }
         },

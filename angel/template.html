@@ -188,7 +188,8 @@ a:hover{text-decoration:underline;}
 .chip.active{background:rgba(34,197,94,0.12);color:var(--good);border-color:rgba(34,197,94,0.35);}
 .chip.exited{background:rgba(148,163,184,0.12);color:var(--silver);border-color:rgba(148,163,184,0.35);}
 
-.deal-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-top:14px;}
+.deal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+@media(max-width:560px){.deal-stats{grid-template-columns:repeat(2,1fr);}}
 .deal-stat .ds-val{font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;color:var(--text);}
 .deal-stat .ds-val.positive{color:var(--good);}
 .deal-stat .ds-val.negative{color:var(--bad);}
@@ -211,6 +212,8 @@ a:hover{text-decoration:underline;}
 .round-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;color:var(--text);}
 .round-date{font-size:11px;color:var(--text-dimmer);margin-left:6px;font-weight:400;}
 .ds-note{font-size:10px;color:var(--text-dimmer);margin-top:1px;}
+.ds-note.positive{color:var(--good);font-weight:600;}
+.ds-note.negative{color:var(--bad);font-weight:600;}
 
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 </style>
@@ -405,15 +408,11 @@ function renderDeals(){
       const statusChip = `<span class="chip ${round.status}">${round.status}</span>`;
       const dateLbl = round.date ? `<span class="round-date">${round.date}</span>` : '';
       const note = round.valuation_note ? `<div class="ds-note">${round.valuation_note}</div>` : '';
-      const currentNote = round.current_valuation_note ? `<div class="ds-note">${round.current_valuation_note}</div>` : '';
       const hasMarkup = round.entry_valuation && round.current_valuation;
       const returnPct = hasMarkup ? (multiple-1)*100 : null;
-      const returnTile = hasMarkup ? `
-          <div class="deal-stat">
-            <div class="ds-val ${returnPct>=0?'positive':'negative'}">${returnPct>=0?'+':''}${fmtPct(returnPct)}</div>
-            <div class="ds-lbl">Return</div>
-            <div class="ds-note">unrealized</div>
-          </div>` : '';
+      const currentNote = hasMarkup
+        ? `<div class="ds-note ${returnPct>=0?'positive':'negative'}">${returnPct>=0?'+':''}${fmtPct(returnPct)}${round.current_valuation_note ? ` · ${round.current_valuation_note}` : ''}</div>`
+        : (round.current_valuation_note ? `<div class="ds-note">${round.current_valuation_note}</div>` : '');
 
       return `
       <div class="round-block">
@@ -436,7 +435,6 @@ function renderDeals(){
             <div class="ds-lbl">Current Valuation</div>
             ${currentNote}
           </div>
-          ${returnTile}
         </div>
         <div class="check-rows">${checkRows}</div>
       </div>`;
