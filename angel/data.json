@@ -36,7 +36,7 @@
       "entry_valuation": null,
       "current_valuation": null,
       "fronted_by": "Dalton",
-      "checks": { "Jake": 5000, "Dalton": 5000, "Michael": 1000, "Chad": 500 }
+      "checks": { "Jake": 5000, "Dalton": 5000, "Michael": 3000, "Chad": 500 }
     },
     {
       "company": "MedCu",
