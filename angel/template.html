@@ -140,18 +140,27 @@ a:hover{text-decoration:underline;}
 .rank-badge.gold{background:rgba(234,179,8,0.15);color:var(--gold);border-color:rgba(234,179,8,0.4);}
 .rank-badge.silver{background:rgba(148,163,184,0.15);color:var(--silver);border-color:rgba(148,163,184,0.4);}
 .rank-badge.bronze{background:rgba(217,119,6,0.15);color:var(--bronze);border-color:rgba(217,119,6,0.4);}
-.leader-main{flex:1;min-width:0;}
+.leader-main{flex:1 1 140px;min-width:140px;}
 .leader-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;color:var(--text);}
 .leader-mpc{font-size:11px;color:var(--text-dimmer);margin-top:2px;}
-.leader-record{text-align:right;flex-shrink:0;}
-.leader-pct{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:16px;color:var(--accent-bright);}
 .leader-wl{font-size:11px;color:var(--text-dim);}
-.leader-bar-wrap{width:90px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;}
+.leader-bar-wrap{width:90px;height:5px;background:rgba(31,41,55,0.8);border-radius:3px;overflow:hidden;margin-top:5px;margin-left:auto;}
 .leader-bar{height:100%;background:var(--accent);}
+
+/* Two stat columns to the right: Invested, Current Value (+ unrealized growth) */
+.leader-stats{display:flex;align-items:flex-start;gap:22px;flex-shrink:0;}
+.leader-stat{text-align:right;}
+.leader-stat-val{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:15px;color:var(--text);}
+.leader-stat-val.highlight{color:var(--accent-bright);font-size:16px;}
+.leader-stat-lbl{font-size:9.5px;color:var(--text-dimmer);margin-top:2px;text-transform:uppercase;letter-spacing:0.3px;}
 .leader-growth{font-size:11px;font-weight:600;margin-top:3px;}
 .leader-growth.positive{color:var(--good);}
 .leader-growth.negative{color:var(--bad);}
 .leader-growth.flat{color:var(--text-dimmer);font-weight:400;}
+@media(max-width:520px){
+  .leader-row{flex-wrap:wrap;}
+  .leader-stats{width:100%;margin-top:10px;justify-content:space-between;padding-left:40px;}
+}
 
 /* Deal cards */
 .deal-block{border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--card-solid);}
@@ -187,7 +196,11 @@ a:hover{text-decoration:underline;}
 .check-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;font-size:13px;}
 .check-person{color:var(--text);font-weight:500;}
 .check-person .front-tag{color:var(--text-dimmer);font-size:11px;font-weight:400;margin-left:6px;}
+.check-amt-group{display:flex;align-items:baseline;gap:8px;}
 .check-amt{font-family:'IBM Plex Sans',sans-serif;font-weight:600;color:var(--text-dim);}
+.check-now{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:12px;}
+.check-now.positive{color:var(--good);}
+.check-now.negative{color:var(--bad);}
 
 /* Rounds (a company can have multiple investment rounds) */
 .round-list{margin-top:14px;display:flex;flex-direction:column;gap:10px;}
@@ -327,6 +340,7 @@ function renderPersonBody(){
     const roundsIn = rounds.filter(({round}) => (round.checks[p.person]||0) > 0).length;
     const companiesIn = new Set(rounds.filter(({round}) => (round.checks[p.person]||0) > 0).map(r => r.company.company)).size;
 
+    const currentValue = p.total + p.growth;
     let growthCls = 'flat', growthLbl = 'No markups yet';
     if(p.growth > 0){ growthCls = 'positive'; growthLbl = `+${fmtMoney(p.growth)} unrealized`; }
     else if(p.growth < 0){ growthCls = 'negative'; growthLbl = `-${fmtMoney(Math.abs(p.growth))} unrealized`; }
@@ -338,10 +352,17 @@ function renderPersonBody(){
         <div class="leader-name">${p.person}</div>
         <div class="leader-mpc">${roundsIn} investment${roundsIn===1?'':'s'} in ${companiesIn} compan${companiesIn===1?'y':'ies'}</div>
       </div>
-      <div class="leader-record">
-        <div class="leader-pct">${fmtMoney(p.total)}</div>
-        <div class="leader-growth ${growthCls}">${growthLbl}</div>
-        <div class="leader-bar-wrap"><div class="leader-bar" style="width:${Math.round((p.total/max)*100)}%"></div></div>
+      <div class="leader-stats">
+        <div class="leader-stat">
+          <div class="leader-stat-val">${fmtMoney(p.total)}</div>
+          <div class="leader-stat-lbl">Invested</div>
+          <div class="leader-bar-wrap"><div class="leader-bar" style="width:${Math.round((p.total/max)*100)}%"></div></div>
+        </div>
+        <div class="leader-stat">
+          <div class="leader-stat-val highlight">${fmtMoney(currentValue)}</div>
+          <div class="leader-stat-lbl">Current Value</div>
+          <div class="leader-growth ${growthCls}">${growthCls==='flat' ? growthLbl : `(${growthLbl})`}</div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -354,14 +375,22 @@ function renderDeals(){
 
     const roundBlocks = company.rounds.map(round => {
       const total = Object.values(round.checks).reduce((a,b)=>a+b,0);
+      const multiple = roundMultiple(round);
       const checkRows = DATA.people
         .filter(p => round.checks[p] != null)
         .map(p => {
           const frontTag = round.fronted_by === p ? '<span class="front-tag">wrote the check</span>' : '';
+          const amt = round.checks[p];
+          const nowSpan = multiple !== 1
+            ? `<span class="check-now ${multiple>1?'positive':'negative'}">&rarr; ${fmtMoney(amt*multiple)}</span>`
+            : '';
           return `
           <div class="check-row">
             <span class="check-person">${p}${frontTag}</span>
-            <span class="check-amt">${fmtMoney(round.checks[p])}</span>
+            <span class="check-amt-group">
+              <span class="check-amt">${fmtMoney(amt)}</span>
+              ${nowSpan}
+            </span>
           </div>`;
         }).join('');
 
