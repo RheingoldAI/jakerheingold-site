@@ -185,6 +185,14 @@ a:hover{text-decoration:underline;}
 .check-person .front-tag{color:var(--text-dimmer);font-size:11px;font-weight:400;margin-left:6px;}
 .check-amt{font-family:'IBM Plex Sans',sans-serif;font-weight:600;color:var(--text-dim);}
 
+/* Rounds (a company can have multiple investment rounds) */
+.round-list{margin-top:14px;display:flex;flex-direction:column;gap:10px;}
+.round-block{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;}
+.round-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.round-name{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;color:var(--text);}
+.round-date{font-size:11px;color:var(--text-dimmer);margin-left:6px;font-weight:400;}
+.ds-note{font-size:10px;color:var(--text-dimmer);margin-top:1px;}
+
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 </style>
 </head>
@@ -212,13 +220,13 @@ a:hover{text-decoration:underline;}
 
   <div class="card">
     <h2>By Person</h2>
-    <p class="card-sub">Total invested across every deal. Everyone's squared up — this just tracks who put in what.</p>
+    <p class="card-sub">Total invested across every round. Everyone's squared up — this just tracks who put in what.</p>
     <div id="personBody"></div>
   </div>
 
   <div class="card">
-    <h2>Deals</h2>
-    <p class="card-sub" id="dealsSub">Every check, every company.</p>
+    <h2>Companies</h2>
+    <p class="card-sub" id="dealsSub">Every check, every round, every company.</p>
     <div id="dealsBody"></div>
   </div>
 
@@ -238,11 +246,18 @@ function fmtMoney(v){
   return '$'+Number(v).toLocaleString('en-US',{maximumFractionDigits:0});
 }
 
+function allRounds(){
+  // Flattened list of every round, each tagged with its parent company.
+  return DATA.companies.flatMap(company =>
+    company.rounds.map(round => ({company, round}))
+  );
+}
+
 function personTotals(){
   const totals = {};
   DATA.people.forEach(p => totals[p] = 0);
-  DATA.deals.forEach(deal => {
-    Object.entries(deal.checks).forEach(([person, amt]) => {
+  allRounds().forEach(({round}) => {
+    Object.entries(round.checks).forEach(([person, amt]) => {
       totals[person] = (totals[person]||0) + amt;
     });
   });
@@ -250,16 +265,17 @@ function personTotals(){
 }
 
 function totalDeployed(){
-  return DATA.deals.reduce((sum, deal) => sum + Object.values(deal.checks).reduce((a,b)=>a+b,0), 0);
+  return allRounds().reduce((sum, {round}) => sum + Object.values(round.checks).reduce((a,b)=>a+b,0), 0);
 }
 
 function renderKpis(){
   const el = document.getElementById('kpiRow');
-  const activeCount = DATA.deals.filter(d => d.status === 'active').length;
+  const rounds = allRounds();
+  const activeCount = rounds.filter(r => r.round.status === 'active').length;
   const tiles = [
-    {val: DATA.deals.length, lbl:'Deals', sub: `${activeCount} active`},
+    {val: rounds.length, lbl:'Investments', sub: `${activeCount} active, across ${DATA.companies.length} companies`},
     {val: DATA.people.length, lbl:'People', sub: DATA.people.join(', ')},
-    {val: fmtMoney(totalDeployed()), lbl:'Total Deployed', sub:'across all deals'},
+    {val: fmtMoney(totalDeployed()), lbl:'Total Deployed', sub:'across all rounds'},
     {val:'Squared up', lbl:'Balance', sub:'no outstanding IOUs'},
   ];
   el.innerHTML = tiles.map(t=>`
@@ -274,6 +290,7 @@ function renderPersonBody(){
   const body = document.getElementById('personBody');
   const totals = personTotals();
   const max = Math.max(1, ...Object.values(totals));
+  const rounds = allRounds();
   const ranked = DATA.people
     .map(p => ({person:p, total: totals[p]||0}))
     .sort((a,b) => b.total - a.total);
@@ -281,13 +298,14 @@ function renderPersonBody(){
 
   body.innerHTML = ranked.map((p,i)=>{
     const medal = medals[i] ? ` ${medals[i]}` : '';
-    const dealsIn = DATA.deals.filter(d => (d.checks[p.person]||0) > 0).length;
+    const roundsIn = rounds.filter(({round}) => (round.checks[p.person]||0) > 0).length;
+    const companiesIn = new Set(rounds.filter(({round}) => (round.checks[p.person]||0) > 0).map(r => r.company.company)).size;
     return `
     <div class="leader-row">
       <div class="rank-badge${medal}">${i+1}</div>
       <div class="leader-main">
         <div class="leader-name">${p.person}</div>
-        <div class="leader-mpc">${dealsIn} deal${dealsIn===1?'':'s'}</div>
+        <div class="leader-mpc">${roundsIn} investment${roundsIn===1?'':'s'} in ${companiesIn} compan${companiesIn===1?'y':'ies'}</div>
       </div>
       <div class="leader-record">
         <div class="leader-pct">${fmtMoney(p.total)}</div>
@@ -299,21 +317,50 @@ function renderPersonBody(){
 
 function renderDeals(){
   const body = document.getElementById('dealsBody');
-  body.innerHTML = DATA.deals.map(deal => {
-    const total = Object.values(deal.checks).reduce((a,b)=>a+b,0);
-    const checkRows = DATA.people
-      .filter(p => deal.checks[p] != null)
-      .map(p => {
-        const frontTag = deal.fronted_by === p ? '<span class="front-tag">wrote the check</span>' : '';
-        return `
-        <div class="check-row">
-          <span class="check-person">${p}${frontTag}</span>
-          <span class="check-amt">${fmtMoney(deal.checks[p])}</span>
-        </div>`;
-      }).join('');
+  body.innerHTML = DATA.companies.map(company => {
+    const logoImg = company.logo ? `<img src="${company.logo}" alt="${company.company} logo">` : '';
 
-    const statusChip = `<span class="chip ${deal.status}">${deal.status}</span>`;
-    const logoImg = deal.logo ? `<img src="${deal.logo}" alt="${deal.company} logo">` : '';
+    const roundBlocks = company.rounds.map(round => {
+      const total = Object.values(round.checks).reduce((a,b)=>a+b,0);
+      const checkRows = DATA.people
+        .filter(p => round.checks[p] != null)
+        .map(p => {
+          const frontTag = round.fronted_by === p ? '<span class="front-tag">wrote the check</span>' : '';
+          return `
+          <div class="check-row">
+            <span class="check-person">${p}${frontTag}</span>
+            <span class="check-amt">${fmtMoney(round.checks[p])}</span>
+          </div>`;
+        }).join('');
+
+      const statusChip = `<span class="chip ${round.status}">${round.status}</span>`;
+      const dateLbl = round.date ? `<span class="round-date">${round.date}</span>` : '';
+      const note = round.valuation_note ? `<div class="ds-note">${round.valuation_note}</div>` : '';
+
+      return `
+      <div class="round-block">
+        <div class="round-head">
+          <div><span class="round-name">${round.round}</span>${dateLbl}</div>
+          ${statusChip}
+        </div>
+        <div class="deal-stats">
+          <div class="deal-stat">
+            <div class="ds-val">${fmtMoney(total)}</div>
+            <div class="ds-lbl">Total Check</div>
+          </div>
+          <div class="deal-stat">
+            <div class="ds-val">${round.entry_valuation ? fmtMoney(round.entry_valuation) : 'TBD'}</div>
+            <div class="ds-lbl">Entry Valuation</div>
+            ${note}
+          </div>
+          <div class="deal-stat">
+            <div class="ds-val">${round.current_valuation ? fmtMoney(round.current_valuation) : '—'}</div>
+            <div class="ds-lbl">Current Valuation</div>
+          </div>
+        </div>
+        <div class="check-rows">${checkRows}</div>
+      </div>`;
+    }).join('');
 
     return `
     <div class="deal-block">
@@ -321,27 +368,12 @@ function renderDeals(){
         <div class="deal-logo">${logoImg}</div>
         <div class="deal-meta">
           <div class="deal-name-row">
-            <span class="deal-name"><a href="${deal.website}" target="_blank" rel="noopener noreferrer">${deal.company}</a></span>
-            ${statusChip}
+            <span class="deal-name"><a href="${company.website}" target="_blank" rel="noopener noreferrer">${company.company}</a></span>
           </div>
-          <div class="deal-blurb">${deal.blurb||''}</div>
+          <div class="deal-blurb">${company.blurb||''}</div>
         </div>
       </div>
-      <div class="deal-stats">
-        <div class="deal-stat">
-          <div class="ds-val">${fmtMoney(total)}</div>
-          <div class="ds-lbl">Total Check</div>
-        </div>
-        <div class="deal-stat">
-          <div class="ds-val">${deal.entry_valuation ? fmtMoney(deal.entry_valuation) : 'TBD'}</div>
-          <div class="ds-lbl">Entry Valuation</div>
-        </div>
-        <div class="deal-stat">
-          <div class="ds-val">${deal.current_valuation ? fmtMoney(deal.current_valuation) : '—'}</div>
-          <div class="ds-lbl">Current Valuation</div>
-        </div>
-      </div>
-      <div class="check-rows">${checkRows}</div>
+      <div class="round-list">${roundBlocks}</div>
     </div>`;
   }).join('');
 }
