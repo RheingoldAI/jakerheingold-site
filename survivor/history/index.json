@@ -118,5 +118,13 @@
     "run_label": "sat",
     "week": 8,
     "file": "history/2026-w08-sat-20261031.json"
+  },
+  {
+    "id": "2026-w09-thu-20261105",
+    "date": "2026-11-05",
+    "generated_at": "2026-11-05T19:28:33.481498+00:00",
+    "run_label": "thu",
+    "week": 9,
+    "file": "history/2026-w09-thu-20261105.json"
   }
 ]
