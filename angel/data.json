@@ -12,7 +12,7 @@
           "round": "Seed",
           "date": null,
           "status": "active",
-          "entry_valuation": null,
+          "entry_valuation": 25000000,
           "valuation_note": null,
           "current_valuation": null,
           "fronted_by": "Dalton",
@@ -56,10 +56,10 @@
       "blurb": "A pet health membership that runs at-home fur tests for dogs three times a year, turning mineral and toxin markers into health scores and vet-aligned care plans.",
       "rounds": [
         {
-          "round": "Seed",
-          "date": null,
+          "round": "Pre-Seed",
+          "date": "2026-08",
           "status": "active",
-          "entry_valuation": null,
+          "entry_valuation": 5000000,
           "valuation_note": null,
           "current_valuation": null,
           "fronted_by": "Dalton",
@@ -75,9 +75,9 @@
       "rounds": [
         {
           "round": "Seed",
-          "date": null,
+          "date": "2026-10",
           "status": "active",
-          "entry_valuation": null,
+          "entry_valuation": 12000000,
           "valuation_note": null,
           "current_valuation": null,
           "fronted_by": "Dalton",
