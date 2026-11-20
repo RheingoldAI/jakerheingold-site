@@ -325,6 +325,18 @@ tr.this-week td{background:rgba(14,165,233,0.08);}
 .rm-key.won{border-color:#22C55E;}
 .rm-key.lost{border-color:#EF4444;}
 .rm-key.pending{border-color:#E5E7EB;}
+.rm-key.whatif{border-color:#A78BFA;}
+.rm-delta{display:block;font-size:10px;margin-top:3px;}
+.rm-delta.up{color:#4ADE80;}
+.rm-delta.down{color:#F87171;}
+.rm-delta.same{color:var(--text-dimmer);}
+.proj{border:1px solid rgba(167,139,250,0.35);background:rgba(167,139,250,0.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+.proj-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px;}
+.proj-head strong{font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:#C4B5FD;}
+.proj-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.proj-row select{max-width:100%;}
+.proj-row button:disabled{opacity:.4;cursor:default;}
+@media (max-width:560px){ .proj-row select.proj-team{flex:1 1 100%;} }
 .rm-key.plan{border-color:#38BDF8;border-style:dashed;opacity:.85;}
 .rm-chart{position:relative;margin-bottom:16px;}
 .rm-chart svg{display:block;width:100%;height:auto;overflow:visible;}
@@ -394,12 +406,14 @@ tr.this-week td{background:rgba(14,165,233,0.08);}
   <div class="card">
     <h2>Season Roadmap</h2>
     <p class="small-dim" style="margin-top:-8px;margin-bottom:10px;">Full season — logged picks (with what the model recommended at the time) plus the optimal path forward. Recalculates every time you log a pick.</p>
+    <div class="proj" id="projBar" hidden></div>
     <div class="rm-stats" id="rmStats"></div>
     <div class="rm-legend">
       <span><i class="rm-key won"></i>Our pick · won</span>
       <span><i class="rm-key lost"></i>Our pick · lost (✕)</span>
       <span><i class="rm-key pending"></i>Our pick · not played yet</span>
       <span><i class="rm-key plan"></i>AI plan</span>
+      <span><i class="rm-key whatif"></i>What-if (projector)</span>
     </div>
     <div class="rm-chart" id="rmChart"></div>
     <div style="overflow-x:auto;">
@@ -609,17 +623,17 @@ function getInfo(team, week){
   return DATA.team_week[team+'|'+week] || null;
 }
 
-function usedTeamsSet(){
+function usedTeamsSet(usedByWeek = state.usedByWeek){
   const s = new Set();
-  Object.values(state.usedByWeek).forEach(arr => arr.forEach(t => s.add(t)));
+  Object.values(usedByWeek).forEach(arr => arr.forEach(t => s.add(t)));
   return s;
 }
 
-function buildRemainingSlots(){
+function buildRemainingSlots(usedByWeek = state.usedByWeek, startWeek = state.currentWeek){
   const slots = [];
-  for(let w=state.currentWeek; w<=18; w++){
+  for(let w=startWeek; w<=18; w++){
     const required = DOUBLE_WEEKS.has(w) ? 2 : 1;
-    const already = (state.usedByWeek[w]||[]).length;
+    const already = (usedByWeek[w]||[]).length;
     for(let k=already; k<required; k++){
       slots.push(w);
     }
@@ -627,10 +641,11 @@ function buildRemainingSlots(){
   return slots;
 }
 
-function computeAssignment(){
-  const used = usedTeamsSet();
+// usedByWeek/startWeek default to the real state; the projector passes what-if picks.
+function computeAssignment(usedByWeek = state.usedByWeek, startWeek = state.currentWeek){
+  const used = usedTeamsSet(usedByWeek);
   const availTeams = TEAMS.filter(t=>!used.has(t));
-  const slots = buildRemainingSlots(); // array of week numbers, one per slot
+  const slots = buildRemainingSlots(usedByWeek, startWeek); // array of week numbers, one per slot
   const n = Math.max(availTeams.length, slots.length);
   const BIG = 60;
   const cost = [];
@@ -869,13 +884,51 @@ function render(){
 // x = week, y = win probability. Our logged picks are solid (ring = result); the
 // AI's optimal plan for the rest of the season is faded with a dashed ring.
 let lastPlan = null;
-function roadmapPoints(plan){
+
+// ---------- Projector (what-if picks) ----------
+// Lets you try different picks for upcoming weeks and see the rest of the season
+// re-solved around them. Purely a view: nothing here is saved or shared.
+const proj = { week: null, overrides: {} };
+
+function weekPlayedPick(w){
+  return (state.usedByWeek[w]||[]).some(t=>{ const i = getInfo(t,w); return i && i.played; });
+}
+function weekEditable(w){
+  if(w < (DATA.current_week||1) || weekPlayedPick(w)) return false;
+  return TEAMS.some(t=>{ const i = getInfo(t,w); return i && !i.played; });
+}
+function editableWeeks(){
+  const out = [];
+  for(let w=1; w<=18; w++) if(weekEditable(w)) out.push(w);
+  return out;
+}
+function projectedUsed(){
+  const u = {};
+  for(const w in state.usedByWeek) u[w] = state.usedByWeek[w].slice();
+  for(const w in proj.overrides) u[w] = proj.overrides[w].slice();
+  return u;
+}
+// Drop what-ifs that real picks have made impossible (week now played/logged-and-played,
+// or a team since used for real in another week).
+function pruneOverrides(){
+  for(const w in proj.overrides){
+    const wk = +w;
+    const realElsewhere = new Set();
+    for(const v in state.usedByWeek) if(+v!==wk) state.usedByWeek[v].forEach(t=>realElsewhere.add(t));
+    if(!weekEditable(wk) || proj.overrides[w].some(t=>realElsewhere.has(t) || !getInfo(t,wk))) delete proj.overrides[w];
+  }
+}
+function hasOverrides(){ return Object.keys(proj.overrides).length>0; }
+
+function roadmapPoints(plan, usedByWeek = state.usedByWeek, overrides = {}){
   const pts = [];
   for(let w=1; w<=18; w++){
-    (state.usedByWeek[w]||[]).forEach(t=>{
+    const isWhatIf = !!overrides[w];
+    (usedByWeek[w]||[]).forEach(t=>{
       const info = getInfo(t,w);
       if(!info) return;
-      pts.push({w, team:t, p:info.p, opp:info.opp, home:info.home, kind: info.played ? (info.won?'won':'lost') : 'pending'});
+      const kind = isWhatIf ? 'whatif' : info.played ? (info.won?'won':'lost') : 'pending';
+      pts.push({w, team:t, p:info.p, opp:info.opp, home:info.home, kind});
     });
     (plan[w]||[]).forEach(r=>pts.push({w, team:r.team, p:r.p, opp:r.opp, home:r.home, kind:'plan'}));
   }
@@ -889,26 +942,104 @@ function roadmapPoints(plan){
   return pts;
 }
 
-function renderRoadmapStats(pts){
-  const ours = pts.filter(p=>p.kind!=='plan');
-  const ahead = pts.filter(p=>p.kind==='plan' || p.kind==='pending');
+function roadmapSummary(pts){
+  const ours = pts.filter(p=>p.kind==='won' || p.kind==='lost' || p.kind==='pending');
+  const ahead = pts.filter(p=>p.kind==='plan' || p.kind==='pending' || p.kind==='whatif');
   const avg = arr => arr.length ? arr.reduce((s,p)=>s+p.p,0)/arr.length : null;
-  const survive = ahead.reduce((s,p)=>s*p.p, 1);
-  const wins = ours.filter(p=>p.kind==='won').length, losses = ours.filter(p=>p.kind==='lost').length;
+  return {
+    ours, ahead,
+    oursAvg: avg(ours),
+    aheadAvg: avg(pts.filter(p=>p.kind==='plan' || p.kind==='whatif')),
+    survive: ahead.length ? ahead.reduce((s,p)=>s*p.p, 1) : null,
+    wins: ours.filter(p=>p.kind==='won').length,
+    losses: ours.filter(p=>p.kind==='lost').length,
+  };
+}
+
+function renderRoadmapStats(pts, basePts){
+  const cur = roadmapSummary(pts);
+  const base = basePts ? roadmapSummary(basePts) : null;
   const fmt = v => v==null ? '–' : Math.round(v*100)+'%';
-  const stat = (v,l)=>`<div class="rm-stat"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  const fmtOdds = v => v==null ? '–' : v<0.1 ? (v*100).toFixed(1)+'%' : fmt(v);
+  const delta = (now, was, f) => {
+    if(!base || now==null || was==null) return '';
+    const d = now - was;
+    if(Math.abs(d) < 0.00005) return `<span class="rm-delta same">same as current plan</span>`;
+    // If both round to the same display, show more precision so the change is visible.
+    const wasStr = f(now)===f(was) ? (was*100).toFixed(2)+'%' : f(was);
+    return `<span class="rm-delta ${d>0?'up':'down'}">${d>0?'▲':'▼'} vs ${wasStr} current plan</span>`;
+  };
+  const stat = (v,l,d='')=>`<div class="rm-stat"><div class="v">${v}</div><div class="l">${l}</div>${d}</div>`;
   document.getElementById('rmStats').innerHTML =
-    stat(fmt(avg(ours)), `Avg win % of our ${ours.length} picks${ours.length?` (${wins}–${losses})`:''}`) +
-    stat(fmt(avg(pts.filter(p=>p.kind==='plan'))), 'Avg win % of AI plan ahead') +
-    stat(ahead.length ? (survive<0.1 ? (survive*100).toFixed(1)+'%' : fmt(survive)) : '–', `Odds to survive all ${ahead.length} picks left`);
+    stat(fmt(cur.oursAvg), `Avg win % of our ${cur.ours.length} picks${cur.ours.length?` (${cur.wins}–${cur.losses})`:''}`) +
+    stat(fmt(cur.aheadAvg), base ? 'Avg win % of projection ahead' : 'Avg win % of AI plan ahead', delta(cur.aheadAvg, base&&base.aheadAvg, fmt)) +
+    stat(fmtOdds(cur.survive), `Odds to survive all ${cur.ahead.length} picks left`, delta(cur.survive, base&&base.survive, fmtOdds));
+}
+
+function teamOption(t, w){
+  const i = getInfo(t,w);
+  return `<option value="${t}">${TEAM_NAMES[t]||t} ${i.home?'vs':'@'} ${i.opp} — ${Math.round(i.p*100)}%</option>`;
+}
+
+function renderProjector(shownUsed, shownPlan){
+  const bar = document.getElementById('projBar');
+  const weeks = editableWeeks();
+  if(!weeks.length){ bar.innerHTML = ''; bar.hidden = true; return; }
+  bar.hidden = false;
+  if(!weeks.includes(proj.week)) proj.week = weeks[0];
+  const w = proj.week;
+  const need = DOUBLE_WEEKS.has(w) ? 2 : 1;
+  // What's currently shown for this week: what-if, else logged (unplayed), else AI plan.
+  const shown = (shownUsed[w] && shownUsed[w].length ? shownUsed[w].slice() : []).concat((shownPlan[w]||[]).map(r=>r.team)).slice(0, need);
+  // Teams that can be picked this week: playing, not yet played, not used in another week.
+  const usedElsewhere = new Set();
+  for(const v in shownUsed) if(+v!==w) shownUsed[v].forEach(t=>usedElsewhere.add(t));
+  const pool = TEAMS.filter(t=>{ const i = getInfo(t,w); return i && !i.played && !usedElsewhere.has(t); })
+    .sort((a,b)=>getInfo(b,w).p - getInfo(a,w).p);
+
+  const weekOpts = weeks.map(v=>`<option value="${v}"${v===w?' selected':''}>Week ${v}${DOUBLE_WEEKS.has(v)?' (2x)':''}${proj.overrides[v]?' • what-if':''}</option>`).join('');
+  let teamSelects = '';
+  for(let k=0; k<need; k++){
+    const other = shown.filter((_,j)=>j!==k);
+    const opts = pool.filter(t=>!other.includes(t)).map(t=>teamOption(t,w)).join('');
+    teamSelects += `<select class="proj-team" data-k="${k}" aria-label="Week ${w} pick ${k+1}">${opts}</select>`;
+  }
+  const n = Object.keys(proj.overrides).length;
+  bar.innerHTML = `
+    <div class="proj-head"><strong>Projector</strong><span class="small-dim">Try different picks and the rest of the season re-plans around them. Nothing is saved.</span></div>
+    <div class="proj-row">
+      <select id="projWeek" aria-label="Week to change">${weekOpts}</select>
+      ${teamSelects}
+      <button class="secondary" id="projResetWeek"${proj.overrides[w]?'':' disabled'}>Reset week</button>
+      <button class="secondary" id="projResetAll"${n?'':' disabled'}>Reset all${n?` (${n})`:''}</button>
+    </div>`;
+  bar.querySelectorAll('.proj-team').forEach((sel,k)=>{ sel.value = shown[k] || ''; });
+  document.getElementById('projWeek').onchange = e=>{ proj.week = +e.target.value; renderRoadmapChart(lastPlan); };
+  bar.querySelectorAll('.proj-team').forEach(sel=>{
+    sel.onchange = ()=>{
+      const picks = Array.from(bar.querySelectorAll('.proj-team')).map(s=>s.value).filter(Boolean);
+      // Back to exactly the default (logged picks, else AI plan) → not a what-if.
+      const def = (state.usedByWeek[w]||[]).length ? state.usedByWeek[w] : null;
+      if(def && def.length===picks.length && def.every(t=>picks.includes(t))) delete proj.overrides[w];
+      else proj.overrides[w] = picks;
+      renderRoadmapChart(lastPlan);
+    };
+  });
+  document.getElementById('projResetWeek').onclick = ()=>{ delete proj.overrides[w]; renderRoadmapChart(lastPlan); };
+  document.getElementById('projResetAll').onclick = ()=>{ proj.overrides = {}; renderRoadmapChart(lastPlan); };
 }
 
 function renderRoadmapChart(plan){
   lastPlan = plan;
   const host = document.getElementById('rmChart');
   if(!host) return;
-  const pts = roadmapPoints(plan);
-  renderRoadmapStats(pts);
+  pruneOverrides();
+  const projecting = hasOverrides();
+  const shownUsed = projecting ? projectedUsed() : state.usedByWeek;
+  const shownPlan = projecting ? computeAssignment(shownUsed, state.currentWeek) : plan;
+  const pts = roadmapPoints(shownPlan, shownUsed, projecting ? proj.overrides : {});
+  renderRoadmapStats(pts, projecting ? roadmapPoints(plan) : null);
+  renderProjector(shownUsed, shownPlan);
 
   const W = Math.max(300, host.clientWidth || 700);
   const narrow = W < 560;
@@ -944,6 +1075,10 @@ function renderRoadmapChart(plan){
     s += `<line class="grid" x1="${m.l}" x2="${W-m.r}" y1="${yy}" y2="${yy}"/>`;
     s += `<text class="axis-label" x="${m.l-8}" y="${yy}" text-anchor="end" dominant-baseline="middle">${Math.round(v*100)}%</text>`;
   }
+  // highlight the week open in the projector
+  if(proj.week && weekEditable(proj.week)){
+    s += `<rect x="${(x(proj.week)-step/2).toFixed(1)}" y="${m.t-2}" width="${step.toFixed(1)}" height="${ih+4}" rx="6" fill="rgba(167,139,250,0.10)"/>`;
+  }
   // x labels (every week on desktop, odd weeks + current on narrow)
   const firstPlanWeek = Math.min(...pts.filter(p=>p.kind==='plan').map(p=>p.w), 19);
   for(let w=1; w<=18; w++){
@@ -972,13 +1107,15 @@ function renderRoadmapChart(plan){
     if(A.length===B.length) A.forEach((p,i)=>pairs.push([p,B[i]]));
     else A.forEach(a=>B.forEach(b=>pairs.push([a,b])));
     pairs.forEach(([a,b])=>{
-      const plan = a.kind==='plan' || b.kind==='plan';
+      const whatif = a.kind==='whatif' || b.kind==='whatif';
+      const plan = whatif || a.kind==='plan' || b.kind==='plan';
       s += `<line x1="${px(a).toFixed(1)}" y1="${a.cy.toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${b.cy.toFixed(1)}" stroke-width="2" stroke-linecap="round" `
-        + (plan ? `stroke="#38BDF8" stroke-opacity="0.6" stroke-dasharray="5 5"/>` : `stroke="rgba(229,231,235,0.55)"/>`);
+        + (whatif ? `stroke="#A78BFA" stroke-opacity="0.8" stroke-dasharray="5 5"/>`
+          : plan ? `stroke="#38BDF8" stroke-opacity="0.6" stroke-dasharray="5 5"/>` : `stroke="rgba(229,231,235,0.55)"/>`);
     });
   }
   // dots
-  const ringColor = {won:'#22C55E', lost:'#EF4444', pending:'#E5E7EB', plan:'#38BDF8'};
+  const ringColor = {won:'#22C55E', lost:'#EF4444', pending:'#E5E7EB', plan:'#38BDF8', whatif:'#A78BFA'};
   pts.forEach((p,i)=>{
     const cx = px(p).toFixed(1), cy = p.cy.toFixed(1);
     const plan = p.kind==='plan';
@@ -998,7 +1135,7 @@ function renderRoadmapChart(plan){
   host.innerHTML = s;
 
   const tip = document.getElementById('rmTip');
-  const label = {won:'Our pick · won', lost:'Our pick · lost', pending:'Our pick · not played yet', plan:'AI plan'};
+  const label = {won:'Our pick · won', lost:'Our pick · lost', pending:'Our pick · not played yet', plan:'AI plan', whatif:'What-if pick (not saved)'};
   const scale = () => host.getBoundingClientRect().width / W;
   const show = (g)=>{
     host.querySelectorAll('.pt.active').forEach(e=>e.classList.remove('active'));
@@ -1015,7 +1152,19 @@ function renderRoadmapChart(plan){
   host.querySelectorAll('.pt').forEach(g=>{
     g.addEventListener('mouseenter', ()=>show(g));
     g.addEventListener('focus', ()=>show(g));
-    g.addEventListener('click', (e)=>{ e.stopPropagation(); show(g); });
+    g.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const p = pts[+g.dataset.i];
+      // Tapping an upcoming week opens it in the projector.
+      if(weekEditable(p.w) && proj.week!==p.w){
+        proj.week = p.w;
+        renderRoadmapChart(lastPlan);
+        const again = host.querySelector(`.pt[data-i="${g.dataset.i}"]`);
+        if(again) show(again);
+        return;
+      }
+      show(g);
+    });
     g.addEventListener('mouseleave', hide);
     g.addEventListener('blur', hide);
   });
