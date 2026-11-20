@@ -1,3 +1,12 @@
 {
-  "1": {"picked": ["PIT"], "recommended": ["PIT"]}
+  "1": {"picked": ["CHI"], "recommended": ["PIT"]},
+  "2": {"picked": ["SF"], "recommended": ["LAC"]},
+  "3": {"picked": ["DET"], "recommended": ["LAC"]},
+  "4": {"picked": ["MIN"], "recommended": ["NYG"]},
+  "5": {"picked": ["HOU"], "recommended": ["NYJ"]},
+  "6": {"picked": ["KC", "NE"], "recommended": ["NYG", "PHI"]},
+  "7": {"picked": ["DEN"], "recommended": ["CLE"]},
+  "8": {"picked": ["CIN"], "recommended": ["CLE"]},
+  "9": {"picked": ["DAL"]},
+  "10": {"picked": ["LA"]}
 }
