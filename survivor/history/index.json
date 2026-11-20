@@ -158,5 +158,13 @@
     "run_label": "thu",
     "week": 11,
     "file": "history/2026-w11-thu-20261119.json"
+  },
+  {
+    "id": "2026-w11-manual-20261120",
+    "date": "2026-11-20",
+    "generated_at": "2026-11-20T00:39:34.843113+00:00",
+    "run_label": "manual",
+    "week": 11,
+    "file": "history/2026-w11-manual-20261120.json"
   }
 ]
