@@ -879,12 +879,12 @@ function roadmapPoints(plan){
     });
     (plan[w]||[]).forEach(r=>pts.push({w, team:r.team, p:r.p, opp:r.opp, home:r.home, kind:'plan'}));
   }
-  // Spread out the two picks in double weeks so neither hides the other.
+  // Within a week, order picks top (higher win %) to bottom; lines pair by this order.
   const byWeek = {};
   pts.forEach(p=>(byWeek[p.w]=byWeek[p.w]||[]).push(p));
   Object.values(byWeek).forEach(arr=>{
     arr.sort((a,b)=>b.p-a.p);
-    arr.forEach((p,i)=>{ p.slot = arr.length>1 ? (i===0?-1:1) : 0; });
+    arr.forEach((p,i)=>{ p.rank = i; });
   });
   return pts;
 }
@@ -921,8 +921,20 @@ function renderRoadmapChart(plan){
   const y = p => m.t + (1-(p-yMin)/(1-yMin))*ih;
   const step = iw/18;
   const r = Math.max(8, Math.min(narrow?9:13, step*0.3));
-  const off = r*0.85;
-  const px = p => x(p.w) + p.slot*off;
+  // Double-week picks share one x so they read as the same week. Each sits at its
+  // true win %, unless the two logos would overlap: then they're pushed apart evenly
+  // around their midpoint (the tooltip always shows the exact number).
+  const px = p => x(p.w);
+  const minGap = 2*r + 4;
+  pts.forEach(p=>{ p.cy = y(p.p); });
+  for(let w=1; w<=18; w++){
+    const a = pts.filter(p=>p.w===w).sort((u,v)=>u.rank-v.rank);
+    if(a.length===2 && a[1].cy - a[0].cy < minGap){
+      const mid = (a[0].cy + a[1].cy)/2;
+      a[0].cy = mid - minGap/2;
+      a[1].cy = mid + minGap/2;
+    }
+  }
 
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Win probability of each pick by week: our picks so far, then the AI plan for the rest of the season">`;
   s += `<defs><clipPath id="rmLogoClip" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath></defs>`;
@@ -946,25 +958,29 @@ function renderRoadmapChart(plan){
     s += `<text class="axis-label" x="${(+dx-6).toFixed(1)}" y="${m.t-8}" text-anchor="end">← our picks</text>`;
     s += `<text class="axis-label" x="${(+dx+6).toFixed(1)}" y="${m.t-8}" text-anchor="start" style="fill:#38BDF8">AI plan →</text>`;
   }
-  // weekly-average path: solid through our picks, dashed through the plan
-  const weekAvg = (kindTest) => {
-    const out = [];
-    for(let w=1; w<=18; w++){
-      const a = pts.filter(p=>p.w===w && kindTest(p));
-      if(a.length) out.push([x(w), y(a.reduce((t,p)=>t+p.p,0)/a.length)]);
-    }
-    return out;
-  };
-  const ourLine = weekAvg(p=>p.kind!=='plan');
-  const planLine = weekAvg(p=>p.kind==='plan');
-  if(ourLine.length && planLine.length) planLine.unshift(ourLine[ourLine.length-1]);
-  const path = arr => arr.map((q,i)=>`${i?'L':'M'}${q[0].toFixed(1)},${q[1].toFixed(1)}`).join('');
-  if(ourLine.length>1) s += `<path d="${path(ourLine)}" fill="none" stroke="rgba(229,231,235,0.55)" stroke-width="2" stroke-linejoin="round"/>`;
-  if(planLine.length>1) s += `<path d="${path(planLine)}" fill="none" stroke="#38BDF8" stroke-opacity="0.6" stroke-width="2" stroke-dasharray="5 5" stroke-linejoin="round"/>`;
+  // Path through the picks themselves. Single -> double fans out to both picks,
+  // double -> single converges back, double -> double pairs top-to-top and
+  // bottom-to-bottom. Segments touching the AI plan are dashed blue.
+  const weeksWithPts = [];
+  for(let w=1; w<=18; w++){
+    const a = pts.filter(p=>p.w===w).sort((u,v)=>u.rank-v.rank);
+    if(a.length) weeksWithPts.push(a);
+  }
+  for(let k=1; k<weeksWithPts.length; k++){
+    const A = weeksWithPts[k-1], B = weeksWithPts[k];
+    const pairs = [];
+    if(A.length===B.length) A.forEach((p,i)=>pairs.push([p,B[i]]));
+    else A.forEach(a=>B.forEach(b=>pairs.push([a,b])));
+    pairs.forEach(([a,b])=>{
+      const plan = a.kind==='plan' || b.kind==='plan';
+      s += `<line x1="${px(a).toFixed(1)}" y1="${a.cy.toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${b.cy.toFixed(1)}" stroke-width="2" stroke-linecap="round" `
+        + (plan ? `stroke="#38BDF8" stroke-opacity="0.6" stroke-dasharray="5 5"/>` : `stroke="rgba(229,231,235,0.55)"/>`);
+    });
+  }
   // dots
   const ringColor = {won:'#22C55E', lost:'#EF4444', pending:'#E5E7EB', plan:'#38BDF8'};
   pts.forEach((p,i)=>{
-    const cx = px(p).toFixed(1), cy = y(p.p).toFixed(1);
+    const cx = px(p).toFixed(1), cy = p.cy.toFixed(1);
     const plan = p.kind==='plan';
     s += `<g class="pt" data-i="${i}" tabindex="0">`;
     s += `<circle cx="${cx}" cy="${cy}" r="${r+8}" fill="transparent"/>`; // larger hit target
@@ -992,7 +1008,7 @@ function renderRoadmapChart(plan){
       <div class="sub">${Math.round(p.p*100)}% win probability · ${label[p.kind]}</div>`;
     const k = scale();
     tip.style.left = Math.min(Math.max(px(p)*k, 90), host.clientWidth-90)+'px';
-    tip.style.top = (y(p.p)*k - r*k)+'px';
+    tip.style.top = (p.cy*k - r*k)+'px';
     tip.classList.add('show');
   };
   const hide = ()=>{ tip.classList.remove('show'); host.querySelectorAll('.pt.active').forEach(e=>e.classList.remove('active')); };
