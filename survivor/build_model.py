@@ -37,13 +37,22 @@ TEAM_ALIASES = {"LAR": "LA", "OAK": "LV"}
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PICKS_PATH = os.path.join(BASE_DIR, "picks.json")
+PICKS_API_URL = os.environ.get("SURVIVOR_PICKS_API", "https://jakerheingold.ai/api/survivor-picks")
 
 
 def load_logged_picks():
-    """The season's actual picks, checked into picks.json so they're baked into every
-    build and visible to anyone loading the page — not just whoever's browser logged
-    them. Update this file (week -> {picked: [...], recommended: [...]}) and rerun the
-    pipeline whenever a real pick is made."""
+    """The season's actual picks. The source of truth is the shared store behind
+    /api/survivor-picks (what the page's Log Pick button saves to). picks.json is only
+    the fallback if that endpoint can't be reached, and the seed before the first save."""
+    try:
+        resp = requests.get(PICKS_API_URL, headers={"User-Agent": UA}, timeout=20)
+        resp.raise_for_status()
+        picks = resp.json().get("picks")
+        if isinstance(picks, dict):
+            print(f"  {len(picks)} logged weeks from {PICKS_API_URL}", file=sys.stderr)
+            return picks
+    except Exception as e:  # network error, bad JSON, endpoint not deployed yet
+        print(f"  Shared picks unavailable ({e}); falling back to picks.json", file=sys.stderr)
     try:
         with open(PICKS_PATH) as f:
             return json.load(f)

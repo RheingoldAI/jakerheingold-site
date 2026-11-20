@@ -6,7 +6,19 @@ Live NFL Survivor Pool picker, served at [jakerheingold.ai/survivor](https://jak
 - `build_model.py` — fetches live nflverse odds + nfelo's power-ratings CSV, computes win probabilities, solves the full-season optimal assignment, renders `index.html` from `template.html`, and writes a `history/` snapshot
 - `index.html` — **generated file**, committed automatically by CI. Don't hand-edit.
 - `history/` — one JSON snapshot per automated run, plus `index.json` listing them. This is what powers the "History" section on the page.
-- `picks.json` — **hand-maintained**, the season's actual official picks: `{"<week>": {"picked": ["TEAM"], "recommended": ["TEAM"]}}`. Baked into every build as `DATA.logged_picks` so a logged pick shows up for anyone who opens the link, not just whoever's browser clicked "Log Pick" (browser local storage alone doesn't persist across devices/visitors). **Whenever a real pick is made, update this file and rerun the pipeline** — that's the only way it becomes visible to other people.
+- `picks.json` — the **seed / fallback** copy of the season's official picks: `{"<week>": {"picked": ["TEAM"], "recommended": ["TEAM"]}}`. The live copy lives in the shared store below; this file is only used before the first save and if that store can't be reached.
+
+## Shared picks (cross-device)
+
+Official picks are stored in Vercel Blob behind `api/survivor-picks.js` (at the repo root, so it serves at `/api/survivor-picks`):
+
+- `GET /api/survivor-picks` → `{picks, updatedAt, source}`. Public, never cached. The page calls it on every load, so every device and visitor sees the same picks.
+- `POST /api/survivor-picks` with `{picks}` and header `x-survivor-passcode` → saves for everyone. The page's Log Pick / Undo / Erase buttons do this; the page asks for the passcode once per device.
+- The passcode is the `SURVIVOR_EDIT_PASSCODE` environment variable in the Vercel project. Without it, the endpoint is read-only.
+- Each save is a new blob; the last 50 versions are kept, so a bad save can be rolled back from the Vercel Blob dashboard by deleting the newest version.
+- `build_model.py` reads the same endpoint, so the Thursday/Saturday runs and history snapshots reflect the real picks.
+
+Picks are no longer kept in browser local storage at all — that's what used to make picks differ between devices and "reset" on reload.
 
 ## Automation
 

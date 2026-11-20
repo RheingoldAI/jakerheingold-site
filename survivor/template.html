@@ -349,8 +349,9 @@ tr.this-week td{background:rgba(14,165,233,0.08);}
     <div id="pickArea"></div>
     <div class="log-block">
       <label>Log the pick(s) you actually made this week:</label>
-      <p class="small-dim" style="margin-top:-4px;margin-bottom:10px;">Official picks are baked into the page for everyone. Logging one here only saves to your own browser unless it's been made official.</p>
+      <p class="small-dim" style="margin-top:-4px;margin-bottom:10px;">Picks save for everyone on every device. Changing them needs the edit passcode (asked once per device).</p>
       <div class="controls" id="logControls"></div>
+      <p class="small-dim" id="syncStatus" style="margin-top:8px;"></p>
     </div>
   </div>
 
@@ -391,7 +392,7 @@ tr.this-week td{background:rgba(14,165,233,0.08);}
     <div class="controls">
       <button class="secondary" id="prevWeekBtn">&larr; Previous Week</button>
       <button class="secondary" id="nextWeekBtn">Next Week &rarr;</button>
-      <button class="secondary" id="resetBtn">Reset All Data</button>
+      <button class="secondary" id="resetBtn">Erase All Picks</button>
     </div>
     <p class="small-dim" id="freshness" style="margin-top:10px;"></p>
   </div>
@@ -413,33 +414,115 @@ const TEAM_NAMES = {
 const DOUBLE_WEEKS = new Set(DATA.double_weeks);
 const TEAMS = Object.keys(TEAM_NAMES);
 
-const STORAGE_KEY = 'survivor_state_v1';
-let state = { usedByWeek: {}, currentWeek: null, recommendedByWeek: {} };
+// ---------- Shared picks ----------
+// The season's official picks live in one shared store (/api/survivor-picks, backed by
+// Vercel Blob), so every device and every visitor sees the same thing. The copy baked
+// into this page at build time is only a fallback for the first paint or if the API is
+// down. Picks are never kept in this browser's local storage: that's what used to make
+// picks differ between devices and "reset" on reload.
+const PICKS_API = '/api/survivor-picks';
+const PASSCODE_KEY = 'survivor_passcode_v1';
+let OFFICIAL = JSON.parse(JSON.stringify(DATA.logged_picks || {}));
+let state = { usedByWeek: {}, currentWeek: DATA.current_week || 1, recommendedByWeek: {} };
+let syncMsg = '';
 
-// The season's official picks, baked into every build from picks.json — this is what
-// makes a logged pick show up for everyone who opens the link, not just whoever's
-// browser clicked "Log Pick." Local storage only layers your own exploration on top.
-const LOGGED_PICKS = DATA.logged_picks || {};
-
-function loadState(){
-  try{
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if(raw) state = JSON.parse(raw);
-  }catch(e){ /* no saved state yet, or storage unavailable */ }
-  if(!state.currentWeek) state.currentWeek = DATA.current_week || 1;
-  if(!state.recommendedByWeek) state.recommendedByWeek = {};
-  // Official picks always win over whatever's in this browser's local storage, so a
-  // correction made to picks.json propagates everywhere (including the device that
-  // originally logged it) instead of being masked by stale local state forever.
-  for(const w in LOGGED_PICKS){
-    const record = LOGGED_PICKS[w];
-    if(record.picked && record.picked.length) state.usedByWeek[w] = record.picked.slice();
-    if(record.recommended) state.recommendedByWeek[w] = record.recommended;
+function applyPicks(picks){
+  OFFICIAL = picks || {};
+  state.usedByWeek = {};
+  state.recommendedByWeek = {};
+  for(const w in OFFICIAL){
+    const r = OFFICIAL[w];
+    if(r.picked && r.picked.length) state.usedByWeek[w] = r.picked.slice();
+    if(r.recommended && r.recommended.length) state.recommendedByWeek[w] = r.recommended.slice();
   }
 }
-function saveState(){
-  try{ window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e){ console.error('save failed', e); }
+function loadState(){
+  applyPicks(OFFICIAL);
+  // Clear the old per-browser copy of picks from before shared saving existed.
+  try{ window.localStorage.removeItem('survivor_state_v1'); }catch(e){}
+}
+function saveState(){ /* week navigation is per-visit; picks save via commitPicks() */ }
+
+function setSync(msg){
+  syncMsg = msg;
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = msg;
+}
+function fmtUpdated(iso){
+  if(!iso) return '';
+  return new Date(iso).toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+}
+
+async function refreshShared(){
+  try{
+    const res = await fetch(PICKS_API, {cache:'no-store'});
+    if(!res.ok) throw new Error(res.status);
+    const body = await res.json();
+    applyPicks(body.picks);
+    setSync(body.updatedAt ? `Picks synced across devices · last change ${fmtUpdated(body.updatedAt)}` : 'Picks synced across devices');
+  }catch(e){
+    setSync('Couldn’t reach the shared picks — showing the copy from the last model run.');
+  }
+  render();
+}
+
+function getPasscode(forceAsk){
+  let code = null;
+  try{ code = window.localStorage.getItem(PASSCODE_KEY); }catch(e){}
+  if(!code || forceAsk){
+    code = window.prompt('Enter the edit passcode to change official picks:');
+    if(!code) return null;
+    try{ window.localStorage.setItem(PASSCODE_KEY, code); }catch(e){}
+  }
+  return code;
+}
+
+// Apply `mutate` to a copy of the official picks and save it for everyone.
+// The page only changes once the server has accepted the save.
+let saving = false;
+async function commitPicks(mutate, opts = {}){
+  if(saving) return false;
+  const next = JSON.parse(JSON.stringify(OFFICIAL));
+  mutate(next);
+  for(const w in next){
+    const r = next[w];
+    if(!(r.picked && r.picked.length) && !(r.recommended && r.recommended.length)) delete next[w];
+  }
+  let code = getPasscode(false);
+  if(!code) return false;
+  saving = true;
+  setSync('Saving…');
+  try{
+    for(let attempt = 0; attempt < 2; attempt++){
+      const res = await fetch(PICKS_API, {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'x-survivor-passcode': code},
+        body: JSON.stringify({picks: next}),
+      });
+      const body = await res.json().catch(()=>({}));
+      if(res.ok){
+        applyPicks(body.picks);
+        if(opts.onSaved) opts.onSaved();
+        setSync(`Saved for everyone · ${fmtUpdated(body.updatedAt)}`);
+        render();
+        return true;
+      }
+      if(res.status === 401 && attempt === 0){
+        try{ window.localStorage.removeItem(PASSCODE_KEY); }catch(e){}
+        code = getPasscode(true);
+        if(!code) break;
+        continue;
+      }
+      throw new Error(body.error || `Save failed (${res.status})`);
+    }
+    setSync('Not saved — no passcode entered.');
+  }catch(e){
+    setSync(`Not saved: ${e.message}`);
+    alert(`Pick not saved: ${e.message}`);
+  }finally{
+    saving = false;
+  }
+  return false;
 }
 
 // ---------- Hungarian algorithm (square cost matrix, minimize) ----------
@@ -644,9 +727,9 @@ function render(){
     logControls.innerHTML = `<span class="small-dim">Week ${wk} already logged: ${(state.usedByWeek[wk]||[]).join(', ')}</span>
       <button class="secondary" id="undoBtn">Undo last pick this week</button>`;
     document.getElementById('undoBtn').onclick = ()=>{
-      state.usedByWeek[wk].pop();
-      if(state.usedByWeek[wk].length===0) delete state.usedByWeek[wk];
-      saveState(); render();
+      const last = (state.usedByWeek[wk]||[]).slice(-1)[0];
+      if(!confirm(`Remove ${TEAM_NAMES[last]||last} from Week ${wk} for everyone?`)) return;
+      commitPicks(p=>{ if(p[wk] && p[wk].picked) p[wk].picked.pop(); });
     };
   } else {
     // dropdown of teams playing this week, not used, not already played
@@ -671,18 +754,18 @@ function render(){
     btn.onclick = ()=>{
       const t = sel.value;
       if(!t) return;
-      if(!state.recommendedByWeek[wk]){
-        state.recommendedByWeek[wk] = (LOGGED_PICKS[wk] && LOGGED_PICKS[wk].recommended) || recs.map(r=>r.team);
-      }
-      if(!state.usedByWeek[wk]) state.usedByWeek[wk]=[];
-      state.usedByWeek[wk].push(t);
       const req = DOUBLE_WEEKS.has(wk)?2:1;
-      if(state.usedByWeek[wk].length>=req && wk===state.currentWeek){
-        // auto advance
-        let nw = wk+1;
-        state.currentWeek = Math.min(nw,18);
-      }
-      saveState(); render();
+      commitPicks(p=>{
+        if(!p[wk]) p[wk] = {picked:[]};
+        if(!p[wk].picked) p[wk].picked = [];
+        // Record what the model recommended at the time, the first time a week is logged.
+        if(!(p[wk].recommended && p[wk].recommended.length)) p[wk].recommended = recs.map(r=>r.team);
+        p[wk].picked.push(t);
+      }, {onSaved: ()=>{
+        if((state.usedByWeek[wk]||[]).length>=req && wk===state.currentWeek){
+          state.currentWeek = Math.min(wk+1, 18); // auto advance
+        }
+      }});
     };
     logControls.appendChild(sel);
     logControls.appendChild(btn);
@@ -777,9 +860,8 @@ document.getElementById('nextWeekBtn').onclick = ()=>{
   saveState(); render();
 };
 document.getElementById('resetBtn').onclick = ()=>{
-  if(confirm('Reset all logged picks and start over?')){
-    state = { usedByWeek:{}, currentWeek: DATA.current_week || 1 };
-    saveState(); render();
+  if(confirm('Erase ALL official picks for the whole season, for everyone? (The previous version is kept on the server and can be restored.)')){
+    commitPicks(p=>{ for(const w in p) delete p[w]; }, {onSaved: ()=>{ state.currentWeek = DATA.current_week || 1; }});
   }
 };
 
@@ -840,6 +922,8 @@ async function initHistory(){
 
 loadState();
 render();
+setSync('Loading shared picks…');
+refreshShared();
 initHistory();
 </script>
 </body>
